@@ -4,7 +4,7 @@ CFLAGS=-O3 -funroll-loops -c
 WARNFLAGS = -W -Wall -Wextra -Wno-unused
 
 LDFLAGS=-O2 -lm
-SOURCES=Bot.cc MyBot.cc State.cc
+SOURCES=Bot.cc MyBot.cc State.cc Square.cc
 OBJECTS=$(SOURCES:.cc=.o)
 EXECUTABLE=MyBot
 
