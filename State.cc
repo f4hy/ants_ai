@@ -43,6 +43,7 @@ void State::makeMove(const Location &loc, int direction)
 
     Location nLoc = getLocation(loc, direction);
     grid[nLoc.row][nLoc.col].ant = grid[loc.row][loc.col].ant;
+    bug << "set " << nLoc.row << "," <<nLoc.col <<"to value" <<grid[nLoc.row][nLoc.col].ant << endl;
     grid[loc.row][loc.col].ant = -1;
 };
 
