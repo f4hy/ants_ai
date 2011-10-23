@@ -19,6 +19,9 @@ $(EXECUTABLE): $(OBJECTS)
 .cc.o: *.h
 	$(CC) $(WARNFLAGS) $(CFLAGS) $< -o $@
 
+tests: Tests.cc
+	$(CC) $(LDFLAGS) $(WARNFLAGS) Tests.cc -o $@
+
 clean: 
 	-rm -f ${EXECUTABLE} ${OBJECTS} *.d
 	-rm -f debug.txt
