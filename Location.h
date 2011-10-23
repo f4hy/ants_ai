@@ -17,14 +17,17 @@ struct Location
         col = c;
     };
 
-    bool operator==(const Location &other) const {
-        return (row == other.row && col == other.col);
-    }
-
-    bool operator!=(const Location &other) const {
-        return (row != other.row || col != other.col);
-    }
 
 };
+
+
+bool operator==(const Location &loc1, const Location &loc2) {
+    return (loc1.row == loc2.row && loc1.col == loc2.col);
+}
+
+bool operator!=(const Location &loc1, const Location &loc2) {
+    return (loc1.row != loc2.row && loc1.col != loc2.col);
+}
+
 
 #endif //LOCATION_H_
