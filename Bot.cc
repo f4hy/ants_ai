@@ -20,6 +20,7 @@ void Bot::playGame()
     while(cin >> state)
     {
         state.updateVisionInformation();
+        state.setPriorities();
         makeMoves();
         endTurn();
     }
@@ -34,17 +35,31 @@ void Bot::makeMoves()
     //picks out moves for each ant
     for(int ant=0; ant<(int)state.myAnts.size(); ant++)
     {
+        int max = -1000;
+
+        int moveToMake = -1;
         for(int d=0; d<NUMDIRECTIONS; d++)
         {
             Location loc = state.getLocation(state.myAnts[ant], d);
             if(!state.grid[loc.row][loc.col].isWater && state.grid[loc.row][loc.col].ant != 0)
             {
-                state.makeMove(state.myAnts[ant], d);
-                break;
+                if (moveToMake == -1){
+                    state.bug << "was -1" << endl;
+                    moveToMake = d;
+                }
+                else{
+                    Location move = state.getLocation(state.myAnts[ant], moveToMake);
+                    if(state.grid[loc.row][loc.col].priority > state.grid[move.row][move.col].priority) {
+                        state.bug << "found better move" << endl;
+                        moveToMake = d;
+                    }
+                }
             }
         }
+        if (moveToMake != -1){
+            state.makeMove(state.myAnts[ant], moveToMake);
+        }
     }
-
     state.bug << "time taken: " << state.timer.getTime() << "ms" << endl << endl;
 };
 

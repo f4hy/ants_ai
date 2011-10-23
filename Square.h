@@ -9,7 +9,10 @@
 struct Square
 {
     bool isVisible, isWater, isHill, isFood;
+    bool isPassible;
     int ant, hillPlayer;
+    int priority;
+    int permpriority;
     std::vector<int> deadAnts;
     
     // Initializes values.

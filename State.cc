@@ -45,6 +45,7 @@ void State::makeMove(const Location &loc, int direction)
     grid[nLoc.row][nLoc.col].ant = grid[loc.row][loc.col].ant;
     bug << "set " << nLoc.row << "," <<nLoc.col <<"to value" <<grid[nLoc.row][nLoc.col].ant << endl;
     grid[loc.row][loc.col].ant = -1;
+    grid[loc.row][loc.col].permpriority += PriStuck;
 };
 
 //returns the euclidean distance between two locations with the edges wrapped
@@ -56,6 +57,76 @@ double State::distance(const Location &loc1, const Location &loc2)
         dc = min(d2, cols-d2);
     return sqrt(dr*dr + dc*dc);
 };
+
+void State::setpriorityrow(const int priority, const Location loc,const int length ){
+
+    grid[loc.row][loc.col].priority = priority;
+
+    Location eLoc = getLocation(loc,EAST);
+    Location wLoc = getLocation(loc,WEST);
+
+    for(int i = 1; i < length; i++){
+        grid[eLoc.row][eLoc.col].priority += priority-i;
+        grid[wLoc.row][wLoc.col].priority += priority-i;
+        eLoc = getLocation(eLoc,EAST);
+        wLoc = getLocation(wLoc,WEST);
+    }
+    grid[eLoc.row][eLoc.col].priority += priority-length;
+    grid[wLoc.row][wLoc.col].priority += priority-length;
+
+}
+
+void State::priorityradius(const int priority, const Location loc,const int radius ){
+
+
+    setpriorityrow(priority, loc,radius);
+    Location nLoc, sLoc;
+    nLoc = getLocation(loc,NORTH);
+    sLoc = getLocation(loc,SOUTH);
+    for(int i = 1; i < radius; i++){
+        setpriorityrow(priority-i, nLoc,radius-i);
+        setpriorityrow(priority-i, sLoc,radius-i);
+        nLoc = getLocation(nLoc,NORTH);
+        sLoc = getLocation(sLoc,SOUTH);
+    }
+    grid[nLoc.row][nLoc.col].priority += priority-radius;
+    grid[sLoc.row][sLoc.col].priority += priority-radius;
+
+
+    return;
+
+}
+
+void State::setPriorities(){
+    bug << "setting priority" <<endl;
+
+    vector<Location>::iterator it;
+    for(it = food.begin();it < food.end(); it ++){
+        priorityradius(PriFood,*it, RadFood);
+    }
+    for(it = myHills.begin();it < myHills.end(); it++){
+        //priorityradius(PriHill,*it, RadHill);
+        Location loc = *it;
+        grid[loc.row][loc.col].priority += PriHill;        
+    }
+    
+
+    for(it = enemyHills.begin();it < enemyHills.end(); it ++){
+        priorityradius(PriBadHill,*it, RadBadHill);
+
+    }
+
+    
+    // for(it = myAnts.begin();it < myAnts.end(); it ++){
+    //     priorityradius(PriAnt,*it, RadAnt);
+    // }
+    // for(it = enemyAnts.begin();it < enemyAnts.end(); it ++){
+    //     priorityradius(PriBadAnt,*it, RadBadAnt);
+    // }
+
+
+}
+
 
 //returns the new location from moving in a given direction with the edges wrapped
 Location State::getLocation(const Location &loc, int direction)
@@ -131,6 +202,18 @@ ostream& operator<<(ostream &os, const State &state)
                 os << '.';
             else
                 os << '?';
+        }
+        os << ' ';
+        os << '|';
+        os << ' ';
+        for(int col=0; col<state.cols; col++)
+        {
+            if(state.grid[row][col].priority > -1){
+                os << char(state.grid[row][col].priority+48);
+            }
+            else{
+                os << '~';
+            }
         }
         os << endl;
     }
@@ -209,6 +292,7 @@ istream& operator>>(istream &is, State &state)
             {
                 is >> row >> col;
                 state.grid[row][col].isWater = 1;
+                state.grid[row][col].priority = -1000;
             }
             else if(inputType == "f") //food square
             {
