@@ -29,18 +29,19 @@ const int EAST = 1;
 const int SOUTH = 2;
 const int WEST = 3;
 
-const int PriFood = 40;
+const int PriFood = 20;
 const int PriHill = -100;
 const int PriBadHill = 50;
 const int PriBadAnt = -1;
-const int PriAnt = -1;
+const int PriAnt = 2;
 
-const int RadFood = 16;
-const int RadHill = 2;
+const int RadFood = 15;
+const int RadHill = 1;
 const int RadBadHill = 30;
 const int RadBadAnt = 2;
 const int RadAnt = 2;
 
+// Added to squares already visited
 const int PriStuck = -10;
 
 /*
