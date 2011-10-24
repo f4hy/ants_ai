@@ -234,7 +234,10 @@ void State::checkForDeadEnds(const int row, const int col){
     for(int d=0; d<NUMDIRECTIONS; d++){
 
         Location candidate = getLocation(water,d);
-        if(grid[candidate.row][candidate.col].isWater){
+        if(grid[candidate.row][candidate.col].isWater
+           || grid[candidate.row][candidate.col].isFood
+           || grid[candidate.row][candidate.col].hillPlayer > -1)
+        {
             continue;
         }
         else{
