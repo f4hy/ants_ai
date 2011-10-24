@@ -102,12 +102,60 @@ void State::priorityradius(const int priority, const Location loc,const int radi
 
 }
 
+
+void State::priorityradiusBFS(const int priority, const Location loc,const int radius ){
+
+    queue<Location> locQ;
+    queue<int> depthQ;
+    
+    
+    int depth = 1;
+    int currentpriority = 1;
+    
+
+    
+    locQ.push(loc);
+    depthQ.push(depth);
+    
+    grid[loc.row][loc.col].priority = priority;
+    grid[loc.row][loc.col].alreadyUpdated = true;
+
+    if(radius<1){return;}
+    
+    while (!locQ.empty()){
+
+        if(depth > radius){
+            bug << "Reached max depth " << depth  << endl;
+            return;
+        }
+        Location currentLoc = locQ.front();
+        depth = depthQ.front();
+        locQ.pop();
+        depthQ.pop();
+        
+        for(int d=0; d<NUMDIRECTIONS; d++){
+            Location nLoc = getLocation(currentLoc,d);
+            if(!(grid[nLoc.row][nLoc.col].alreadyUpdated) && !(grid[nLoc.row][nLoc.col].isWater)){
+                grid[nLoc.row][nLoc.col].alreadyUpdated = true;
+                grid[nLoc.row][nLoc.col].priority = priority - ((priority*depth)/radius);
+                locQ.push(nLoc);
+                depthQ.push(depth+1);
+                
+            }
+        }
+    }
+    bug << "locQ was empty! " << depth  << endl;
+
+
+}
+
+
 void State::setPriorities(){
     bug << "setting priority" <<endl;
 
     vector<Location>::iterator it;
     for(it = food.begin();it < food.end(); it ++){
-        priorityradius(PriFood,*it, RadFood);
+        priorityradiusBFS(PriFood,*it, RadFood);
     }
     for(it = myHills.begin();it < myHills.end(); it++){
         //priorityradius(PriHill,*it, RadHill);

@@ -85,6 +85,7 @@ struct State
     void setPriorities();
     void priorityradius(const int priority, const Location loc,const int radius );
     void setpriorityrow(const int priority, const Location loc,const int length );
+    void priorityradiusBFS(const int priority, const Location loc,const int radius );
 
     void checkForDeadEnds(const int row, const int col);
 
