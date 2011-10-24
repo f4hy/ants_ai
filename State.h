@@ -18,7 +18,7 @@
 #include "Location.h"
 
 /*
-    constants
+  constants
 */
 const int NUMDIRECTIONS = 4;
 const char CDIRECTIONS[4] = {'N', 'E', 'S', 'W'};
@@ -44,13 +44,17 @@ const int RadAnt = 2;
 // Added to squares already visited
 const int PriStuck = -10;
 
+
+// Added to priority of open squares next to water
+const int PriNearWater = -2;
+
 /*
-    struct to store current state information
+  struct to store current state information
 */
 struct State
 {
     /*
-        Variables
+      Variables
     */
     int rows, cols,
         turn, turns,
@@ -65,12 +69,12 @@ struct State
 
     std::vector<Location> priorityUpdateThisRound;
 
-    
+
     Timer timer;
     Bug bug;
 
     /*
-        Functions
+      Functions
     */
     State();
     ~State();
@@ -81,7 +85,9 @@ struct State
     void setPriorities();
     void priorityradius(const int priority, const Location loc,const int radius );
     void setpriorityrow(const int priority, const Location loc,const int length );
-        
+
+    void checkForDeadEnds(const int row, const int col);
+
     void makeMove(const Location &loc, int direction);
 
     double distance(const Location &loc1, const Location &loc2);

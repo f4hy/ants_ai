@@ -34,6 +34,9 @@ void State::reset()
         for(int col=0; col<cols; col++)
             if(!grid[row][col].isWater)
                 grid[row][col].reset();
+            else{
+                checkForDeadEnds(row,col);
+            }
 };
 
 //outputs move information to the engine
@@ -47,6 +50,8 @@ void State::makeMove(const Location &loc, int direction)
     grid[loc.row][loc.col].ant = -1;
     grid[loc.row][loc.col].permpriority += PriStuck;
 };
+
+
 
 //returns the euclidean distance between two locations with the edges wrapped
 double State::distance(const Location &loc1, const Location &loc2)
@@ -107,16 +112,16 @@ void State::setPriorities(){
     for(it = myHills.begin();it < myHills.end(); it++){
         //priorityradius(PriHill,*it, RadHill);
         Location loc = *it;
-        grid[loc.row][loc.col].priority += PriHill;        
+        grid[loc.row][loc.col].priority += PriHill;
     }
-    
+
 
     for(it = enemyHills.begin();it < enemyHills.end(); it ++){
         priorityradius(PriBadHill,*it, RadBadHill);
 
     }
 
-    
+
     // for(it = myAnts.begin();it < myAnts.end(); it ++){
     //     priorityradius(PriAnt,*it, RadAnt);
     // }
@@ -126,6 +131,37 @@ void State::setPriorities(){
 
 
 }
+
+
+void State::checkForDeadEnds(const int row, const int col){
+
+    Location water = Location(row,col);
+    for(int d=0; d<NUMDIRECTIONS; d++){
+
+        Location candidate = getLocation(water,d);
+        if(grid[candidate.row][candidate.col].isWater){
+            continue;
+        }
+        else{
+            int count = 0;
+            for(int dir=0; dir<NUMDIRECTIONS; dir++){
+                Location nloc = getLocation(candidate,dir);
+                if(grid[nloc.row][nloc.col].isWater){
+                    count++;
+                    grid[candidate.row][candidate.col].priority += PriNearWater;
+                }
+            }
+            if (count>2){
+                grid[candidate.row][candidate.col].isWater = 1;
+            }
+        }
+
+
+    }
+}
+
+
+
 
 
 //returns the new location from moving in a given direction with the edges wrapped
