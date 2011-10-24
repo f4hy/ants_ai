@@ -161,7 +161,7 @@ void State::priorityradiusBFS(const int priority, const Location loc,const int r
     locQ.push(loc);
     depthQ.push(depth);
 
-    grid[loc.row][loc.col].priority += priority;
+    grid[loc.row][loc.col].priority += sign*priority*priority;
     grid[loc.row][loc.col].updateIndex = updateIndex;
 
     if(radius<1){return;}
@@ -182,6 +182,8 @@ void State::priorityradiusBFS(const int priority, const Location loc,const int r
             if((grid[nLoc.row][nLoc.col].updateIndex != updateIndex) && !(grid[nLoc.row][nLoc.col].isWater)){
                 grid[nLoc.row][nLoc.col].updateIndex = updateIndex;
                 int x= priority - (max(1,(priority*depth)/radius)); //Fast sqr
+
+
                 grid[nLoc.row][nLoc.col].priority += sign* (x*x);
                 locQ.push(nLoc);
                 depthQ.push(depth+1);
@@ -209,7 +211,6 @@ void State::setPriorities(){
 
     for(it = enemyHills.begin();it < enemyHills.end(); it ++){
         priorityradiusBFS(PriBadHill,*it, RadBadHill);
-
     }
 
 
