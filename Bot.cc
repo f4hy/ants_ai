@@ -35,8 +35,6 @@ void Bot::makeMoves()
     //picks out moves for each ant
     for(int ant=0; ant<(int)state.myAnts.size(); ant++)
     {
-        int max = -1000;
-
         int moveToMake = -1;
         for(int d=0; d<NUMDIRECTIONS; d++)
         {
