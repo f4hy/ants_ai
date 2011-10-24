@@ -7,6 +7,8 @@ State::State()
 {
     gameover = 0;
     turn = 0;
+    updateIndex=0;
+
     bug.open("./debug.txt");
 };
 
@@ -30,6 +32,8 @@ void State::reset()
     myHills.clear();
     enemyHills.clear();
     food.clear();
+    updateIndex=0;
+
     for(int row=0; row<rows; row++)
         for(int col=0; col<cols; col++)
             if(!grid[row][col].isWater)
@@ -102,26 +106,66 @@ void State::priorityradius(const int priority, const Location loc,const int radi
 
 }
 
+// void State::chooseAntBFS(const Location loc, const int targetType ){
+
+//     queue<Location> locQ;
+
+//     updateindex++;
+
+
+
+//     locQ.push(loc);
+
+
+//     while (!locQ.empty()){
+
+//         Location currentLoc = locQ.front();
+//         locQ.pop();
+
+//         for(int d=0; d<NUMDIRECTIONS; d++){
+//             Location nLoc = getLocation(currentLoc,d);
+//             if(!(grid[nLoc.row][nLoc.col].isWater)){
+//                 grid[nLoc.row][nLoc.col].priority = priority - ((priority*depth)/radius);
+//                 locQ.push(nLoc);
+
+//             }
+//         }
+//     }
+//     bug << "locQ was empty! " << depth  << endl;
+
+
+// }
+
+
 
 void State::priorityradiusBFS(const int priority, const Location loc,const int radius ){
 
     queue<Location> locQ;
     queue<int> depthQ;
-    
-    
+
+
     int depth = 1;
     int currentpriority = 1;
-    
+    updateIndex++;
 
-    
+    int sign;
+    if (priority > 0){
+        sign = 1;
+    }
+    else{
+        sign = -1;
+        
+    }
+        
+
     locQ.push(loc);
     depthQ.push(depth);
-    
-    grid[loc.row][loc.col].priority = priority;
-    grid[loc.row][loc.col].alreadyUpdated = true;
+
+    grid[loc.row][loc.col].priority += priority;
+    grid[loc.row][loc.col].updateIndex = updateIndex;
 
     if(radius<1){return;}
-    
+
     while (!locQ.empty()){
 
         if(depth > radius){
@@ -132,15 +176,16 @@ void State::priorityradiusBFS(const int priority, const Location loc,const int r
         depth = depthQ.front();
         locQ.pop();
         depthQ.pop();
-        
+
         for(int d=0; d<NUMDIRECTIONS; d++){
             Location nLoc = getLocation(currentLoc,d);
-            if(!(grid[nLoc.row][nLoc.col].alreadyUpdated) && !(grid[nLoc.row][nLoc.col].isWater)){
-                grid[nLoc.row][nLoc.col].alreadyUpdated = true;
-                grid[nLoc.row][nLoc.col].priority = priority - ((priority*depth)/radius);
+            if((grid[nLoc.row][nLoc.col].updateIndex != updateIndex) && !(grid[nLoc.row][nLoc.col].isWater)){
+                grid[nLoc.row][nLoc.col].updateIndex = updateIndex;
+                int x= priority - (max(1,(priority*depth)/radius)); //Fast sqr
+                grid[nLoc.row][nLoc.col].priority += sign* (x*x);
                 locQ.push(nLoc);
                 depthQ.push(depth+1);
-                
+
             }
         }
     }
@@ -158,20 +203,21 @@ void State::setPriorities(){
         priorityradiusBFS(PriFood,*it, RadFood);
     }
     for(it = myHills.begin();it < myHills.end(); it++){
-        //priorityradius(PriHill,*it, RadHill);
-        Location loc = *it;
-        grid[loc.row][loc.col].priority += PriHill;
+        priorityradiusBFS(PriHill,*it, RadHill);
     }
 
 
     for(it = enemyHills.begin();it < enemyHills.end(); it ++){
-        priorityradius(PriBadHill,*it, RadBadHill);
+        priorityradiusBFS(PriBadHill,*it, RadBadHill);
 
     }
 
 
+    // priorityradiusBFS(4,*myHills.begin(), 4);
+    // priorityradiusBFS(2,*food.begin(), 2);
+
     // for(it = myAnts.begin();it < myAnts.end(); it ++){
-    //     priorityradius(PriAnt,*it, RadAnt);
+    //     priorityradiusBFS(PriAnt,*it, RadAnt);
     // }
     // for(it = enemyAnts.begin();it < enemyAnts.end(); it ++){
     //     priorityradius(PriBadAnt,*it, RadBadAnt);

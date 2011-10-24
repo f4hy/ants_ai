@@ -64,6 +64,8 @@ struct State
     std::vector<double> scores;
     bool gameover;
 
+    int updateIndex;
+    
     std::vector<std::vector<Square> > grid;
     std::vector<Location> myAnts, enemyAnts, myHills, enemyHills, food;
 

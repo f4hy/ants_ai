@@ -6,7 +6,7 @@ Square::Square()
     priority = 0;
     ant = hillPlayer = -1;
     permpriority = 0;
-    alreadyUpdated =0;
+    updateIndex =0;
 };
 
 void Square::reset()
@@ -16,7 +16,7 @@ void Square::reset()
     isFood = 0;
     priority = permpriority;
 
-    alreadyUpdated = 0;
+    updateIndex = 0;
     ant = hillPlayer = -1;
     deadAnts.clear();
     

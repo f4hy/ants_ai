@@ -13,7 +13,7 @@ struct Square
     int ant, hillPlayer;
     int priority;
     int permpriority;
-    bool alreadyUpdated;
+    int updateIndex;
     std::vector<int> deadAnts;
     
     // Initializes values.
