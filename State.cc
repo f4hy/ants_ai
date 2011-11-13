@@ -85,6 +85,17 @@ double State::distance(const Location &loc1, const Location &loc2)
     return sqrt(dr*dr + dc*dc);
 };
 
+//returns the Manhattan distance between two locations with the edges wrapped
+int State::taxidistance(const Location &loc1, const Location &loc2)
+{
+    int d1 = abs(loc1.row-loc2.row),
+        d2 = abs(loc1.col-loc2.col),
+        dr = min(d1, rows-d1),
+        dc = min(d2, cols-d2);
+    return dr + dc;
+};
+
+
 void State::setpriorityrow(const int priority, const Location loc,const int length ){
 
     grid[loc.row][loc.col].priority = priority;
