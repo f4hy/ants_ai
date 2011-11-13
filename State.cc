@@ -297,26 +297,12 @@ void State::priorityDefense(const Location loc){
             }
         }
     }
-    // bug << "defense locQ was empty! " << depth  << endl;
 
-
-    // Set an exit
-
-    // bug << "setting an exit" << endl;
-    // Location exit1 = loc;
-    // Location exit2 = loc;
-    // for(int i=0; i < defenseDistance; i++){
-    //     exit1 = getLocation(exit1,3);
-    //     exit2 = getLocation(exit2,1);
-    //     grid[exit1.row][exit1.col].defensepriority = -100+i;
-    //     grid[exit2.row][exit2.col].defensepriority = -100+i;
-    // }
-    // exit1 = getLocation(loc,2);
-    // exit2 = getLocation(loc,0);
-    // grid[exit1.row][exit1.col].defensepriority -= 1;
-    // grid[exit2.row][exit2.col].defensepriority -= 1;
-
-
+    // corners better than edges
+    for(int d=0; d<NUMDIRECTIONS; d++){
+        Location edge = getLocation(loc,d);
+        grid[edge.row][edge.col].defensepriority -= 1;
+    }
 }
 
 void State::setPriorities(){
@@ -359,7 +345,6 @@ void State::setPriorities(){
                 priorityradius(PriBadAntAttack/d,*it, RadBadAntAttack);
             }
         }
-
     }
 
     if (enemyHills.size() == 0){ // Nothing to attack
@@ -386,7 +371,7 @@ void State::setDefenders(){
     
     numberOfDefenders = myAnts.size() / (defenderThreshhold*myHills.size());
 
-    if(numberOfDefenders > (maxDefenders*myHills.size()) ){  // Code only supports one for now.
+    if(numberOfDefenders > (maxDefenders*myHills.size()) ){ 
         numberOfDefenders = maxDefenders*myHills.size();
     }
 

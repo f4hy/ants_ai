@@ -48,7 +48,7 @@ const int RadAntAttack = 3;
 // Added to squares already visited
 const int PriStuck = -10;
 
-const int defenderThreshhold = 9;
+const int defenderThreshhold = 5;
 
 const int defenseDistance = 10;
 const int maxDefenders = 6;
