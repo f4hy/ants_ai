@@ -21,6 +21,7 @@ void Bot::playGame()
     {
         state.updateVisionInformation();
         state.setPriorities();
+        state.setDefenders();
         makeMoves();
         endTurn();
     }
@@ -30,9 +31,34 @@ void Bot::playGame()
 void Bot::makeMoves()
 {
     state.bug << "turn " << state.turn << ":" << endl;
-    state.bug << state << endl;
+    // state.bug << state << endl;
 
-    //picks out moves for each ant
+
+
+    for(int ant=0; ant<(int)state.defenders.size(); ant++){
+        int moveToMake = -1;
+        for(int d=0; d<NUMDIRECTIONS; d++)
+        {
+            Location loc = state.getLocation(state.defenders[ant], d);
+            if(!state.grid[loc.row][loc.col].isWater && state.grid[loc.row][loc.col].ant != 0)
+            {
+                Location move = state.defenders[ant];
+                if (moveToMake != -1){
+                    Location move = state.getLocation(state.defenders[ant], moveToMake);
+                }
+                if(state.grid[loc.row][loc.col].defensepriority > state.grid[move.row][move.col].defensepriority) {
+                    // state.bug << "found better move" << endl;
+                    moveToMake = d;
+                }
+            }
+        }
+        if (moveToMake != -1){
+            state.makeMove(state.defenders[ant], moveToMake, false);
+        }
+    }
+
+
+//picks out moves for each ant
     for(int ant=0; ant<(int)state.myAnts.size(); ant++)
     {
         int moveToMake = -1;
@@ -42,13 +68,13 @@ void Bot::makeMoves()
             if(!state.grid[loc.row][loc.col].isWater && state.grid[loc.row][loc.col].ant != 0)
             {
                 if (moveToMake == -1){
-                    state.bug << "was -1" << endl;
+                    // state.bug << "was -1" << endl;
                     moveToMake = d;
                 }
                 else{
                     Location move = state.getLocation(state.myAnts[ant], moveToMake);
                     if(state.grid[loc.row][loc.col].priority > state.grid[move.row][move.col].priority) {
-                        state.bug << "found better move" << endl;
+                        // state.bug << "found better move" << endl;
                         moveToMake = d;
                     }
                 }

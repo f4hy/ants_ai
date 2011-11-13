@@ -27,11 +27,25 @@ void State::setup()
 //resets all non-water squares to land and clears the bots ant vector
 void State::reset()
 {
+
+    std::vector<Location>::iterator it;
+    for(it = enemyHills.begin();it < enemyHills.end(); it ++){
+        if(grid[it->row][it->col].ant != -1){
+            enemyHills.erase(it);
+        }
+    }
+
     myAnts.clear();
     enemyAnts.clear();
     myHills.clear();
-    enemyHills.clear();
+    // enemyHills.clear();
+
+
+
+    
     food.clear();
+    defenders.clear();
+    edge_of_view.clear();
     updateIndex=0;
 
     for(int row=0; row<rows; row++)
@@ -44,15 +58,19 @@ void State::reset()
 };
 
 //outputs move information to the engine
-void State::makeMove(const Location &loc, int direction)
+void State::makeMove(const Location &loc, int direction, bool antistuck)
 {
     cout << "o " << loc.row << " " << loc.col << " " << CDIRECTIONS[direction] << endl;
 
     Location nLoc = getLocation(loc, direction);
     grid[nLoc.row][nLoc.col].ant = grid[loc.row][loc.col].ant;
-    bug << "set " << nLoc.row << "," <<nLoc.col <<"to value" <<grid[nLoc.row][nLoc.col].ant << endl;
+
+
+    // bug << "set " << nLoc.row << "," <<nLoc.col <<"to value" <<grid[nLoc.row][nLoc.col].ant << endl;
     grid[loc.row][loc.col].ant = -1;
-    grid[loc.row][loc.col].permpriority += PriStuck;
+    if(antistuck){
+        grid[loc.row][loc.col].permpriority += PriStuck;
+    }
 };
 
 
@@ -106,35 +124,60 @@ void State::priorityradius(const int priority, const Location loc,const int radi
 
 }
 
-// void State::chooseAntBFS(const Location loc, const int targetType ){
+Location State::findClosestInBFS(const Location loc, vector<Location> haystack  ){
 
-//     queue<Location> locQ;
+    queue<Location> locQ;
 
-//     updateindex++;
-
-
-
-//     locQ.push(loc);
+    updateIndex++;
 
 
-//     while (!locQ.empty()){
+    std::vector<Location>::iterator it = std::find(haystack.begin(),haystack.end(),loc);
+    if(it != haystack.end()){
+        bug << "find needle row " <<it->row << " col " << it->col << endl << endl;
+        return *it;
+    }
 
-//         Location currentLoc = locQ.front();
-//         locQ.pop();
+    locQ.push(loc);
 
-//         for(int d=0; d<NUMDIRECTIONS; d++){
-//             Location nLoc = getLocation(currentLoc,d);
-//             if(!(grid[nLoc.row][nLoc.col].isWater)){
-//                 grid[nLoc.row][nLoc.col].priority = priority - ((priority*depth)/radius);
-//                 locQ.push(nLoc);
-
-//             }
-//         }
-//     }
-//     bug << "locQ was empty! " << depth  << endl;
+    grid[loc.row][loc.col].updateIndex = updateIndex;
 
 
-// }
+
+
+    while (!locQ.empty()){
+
+        Location currentLoc = locQ.front();
+        locQ.pop();
+
+        for(int d=0; d<NUMDIRECTIONS; d++){
+            Location nLoc = getLocation(currentLoc,d);
+            if((grid[nLoc.row][nLoc.col].updateIndex != updateIndex) && !(grid[nLoc.row][nLoc.col].isWater)){
+
+
+                it = std::find(haystack.begin(),haystack.end(),nLoc);
+
+                if(it == haystack.end()){
+                    grid[nLoc.row][nLoc.col].updateIndex = updateIndex;
+                    locQ.push(nLoc);
+                }
+                else{
+                    bug << "in find needle row " <<it->row << " col " << it->col << endl << endl;
+                    return *it;
+
+                }
+
+
+
+            }
+        }
+    }
+    bug <<"search failed!!"  << endl;
+
+//    return loc;      // Did not find it, just return the end.
+    return loc;      // Did not find it, just return where we started
+
+
+}
 
 
 
@@ -154,9 +197,9 @@ void State::priorityradiusBFS(const int priority, const Location loc,const int r
     }
     else{
         sign = -1;
-        
+
     }
-        
+
 
     locQ.push(loc);
     depthQ.push(depth);
@@ -196,36 +239,217 @@ void State::priorityradiusBFS(const int priority, const Location loc,const int r
 
 }
 
+void State::priorityDefense(const Location loc){
+
+    queue<Location> locQ;
+    queue<int> depthQ;
+
+
+    int depth = 1;
+    int currentpriority = 1;
+
+    int defensepriority = defenseDistance +1;
+
+    updateIndex++;
+
+
+    locQ.push(loc);
+    depthQ.push(depth);
+
+    grid[loc.row][loc.col].defensepriority = -100000;
+    grid[loc.row][loc.col].updateIndex = updateIndex;
+
+    if(defenseDistance<1){return;}
+
+    while (!locQ.empty()){
+
+        if(depth > defenseDistance){
+            bug << "Reached max depth " << depth  << endl;
+            break;
+        }
+        Location currentLoc = locQ.front();
+        depth = depthQ.front();
+        locQ.pop();
+        depthQ.pop();
+
+        for(int d=0; d<NUMDIRECTIONS; d++){
+            Location nLoc = getLocation(currentLoc,d);
+            if((grid[nLoc.row][nLoc.col].updateIndex != updateIndex) && !(grid[nLoc.row][nLoc.col].isWater)){
+                grid[nLoc.row][nLoc.col].updateIndex = updateIndex;
+                int x= defensepriority - (max(1,(defensepriority*depth)/defenseDistance)); //Fast sqr
+
+
+                grid[nLoc.row][nLoc.col].defensepriority = (x);
+                locQ.push(nLoc);
+                depthQ.push(depth+1);
+
+            }
+        }
+    }
+    // bug << "defense locQ was empty! " << depth  << endl;
+
+
+    // Set an exit
+
+    // bug << "setting an exit" << endl;
+    // Location exit1 = loc;
+    // Location exit2 = loc;
+    // for(int i=0; i < defenseDistance; i++){
+    //     exit1 = getLocation(exit1,3);
+    //     exit2 = getLocation(exit2,1);
+    //     grid[exit1.row][exit1.col].defensepriority = -100+i;
+    //     grid[exit2.row][exit2.col].defensepriority = -100+i;
+    // }
+    // exit1 = getLocation(loc,2);
+    // exit2 = getLocation(loc,0);
+    // grid[exit1.row][exit1.col].defensepriority -= 1;
+    // grid[exit2.row][exit2.col].defensepriority -= 1;
+
+
+}
 
 void State::setPriorities(){
     bug << "setting priority" <<endl;
 
     vector<Location>::iterator it;
+    vector<Location>::iterator ant;
     for(it = food.begin();it < food.end(); it ++){
         priorityradiusBFS(PriFood,*it, RadFood);
     }
     for(it = myHills.begin();it < myHills.end(); it++){
         priorityradiusBFS(PriHill,*it, RadHill);
+        priorityDefense(*it);
     }
 
-
-    for(it = enemyHills.begin();it < enemyHills.end(); it ++){
-        priorityradiusBFS(PriBadHill,*it, RadBadHill);
+    for(it = edge_of_view.begin();it < edge_of_view.end(); it ++){
+        priorityradiusBFS(viewradius*2,*it, viewradius*2);
     }
-
+    
 
     // priorityradiusBFS(4,*myHills.begin(), 4);
     // priorityradiusBFS(2,*food.begin(), 2);
 
-    // for(it = myAnts.begin();it < myAnts.end(); it ++){
-    //     priorityradiusBFS(PriAnt,*it, RadAnt);
-    // }
-    // for(it = enemyAnts.begin();it < enemyAnts.end(); it ++){
-    //     priorityradius(PriBadAnt,*it, RadBadAnt);
-    // }
+    int count = 1;
+    for(it = enemyHills.begin();it < enemyHills.end(); it ++){
+        priorityradiusBFS(PriBadHill/count,*it, RadBadHill/count);
+        priorityradiusBFS(1000,*it, 3);
+        count+= 10;
 
+        
+        for(ant = myAnts.begin();ant < myAnts.end(); ant ++){
+            int d = (int)(distance(*it,*ant));
+            if(d>3 && d<RadBadHill/count){
+                priorityradiusBFS(PriAntAttack/d,*it, RadAntAttack);
+            }
+        }
+        for(ant = enemyAnts.begin();ant < enemyAnts.end(); ant ++){
+            int d = (int)(distance(*it,*ant));
+            if(d>0 && d<RadBadHill/count){
+                priorityradius(PriBadAntAttack/d,*it, RadBadAntAttack);
+            }
+        }
+
+    }
+
+    if (enemyHills.size() == 0){ // Nothing to attack
+        for(it = myAnts.begin();it < myAnts.end(); it ++){
+            priorityradiusBFS(PriAnt,*it, RadAnt);
+        }
+
+        for(it = enemyAnts.begin();it < enemyAnts.end(); it ++){
+            priorityradius(PriBadAnt,*it, RadBadAnt);
+        }
+    }    
+    
+
+    
+    
+
+    
+}
+
+void State::setDefenders(){
+    bug << "setting defenders" <<endl;
+
+    if(myHills.size() < 1){return;}
+    
+    numberOfDefenders = myAnts.size() / (defenderThreshhold*myHills.size());
+
+    if(numberOfDefenders > (maxDefenders*myHills.size()) ){  // Code only supports one for now.
+        numberOfDefenders = maxDefenders*myHills.size();
+    }
+
+
+    if(numberOfDefenders < 1){
+        bug << "not enough to defend" << numberOfDefenders <<endl;
+        return;
+    } // Not enough to start defense
+
+    vector<Location>::iterator it;
+
+    // vector<Location>::iterator needle;
+
+
+
+    bug << "myAnt before size" << myAnts.size() <<endl;
+
+
+    for(int i=0; i < numberOfDefenders; ){
+        for(it = myHills.begin();it < myHills.end(); it++){
+
+            if(grid[it->row][it->col].ant != 0){
+            
+            bug << "num def's : i" << numberOfDefenders << "  " << i <<endl ;
+            
+            Location needle = findClosestInBFS(*it,myAnts);
+            bug << "needle row " <<needle.row << " col " << needle.col << endl << endl;
+
+            vector<Location>::iterator foundAnt = find(myAnts.begin(),myAnts.end(),needle);
+
+            if(grid[foundAnt->row][foundAnt->col].ant != 0){
+                bug << "error!! Tried to add no existant defender";
+                return;
+            }
+
+            if(distance(*foundAnt,*it) > defenseDistance){
+                bug << "Closest defender too far, wait for new defender" << endl;
+                return;
+            }
+
+
+            defenders.push_back(*foundAnt); // Add to defenders
+
+            myAnts.erase(foundAnt); // no longer a regular ant.
+
+            }
+
+            i++;
+            if(i>=numberOfDefenders){break;}
+            
+        }
+    }
+    
+
+    // check
+    bug<< "myant after size" << myAnts.size() <<endl;
+    bug<< "defender after size" << defenders.size() <<endl <<endl;
+
+    for(it = myAnts.begin();it < myAnts.end(); it++){
+        bug << "Ant row " <<it->row << " col " << it->col << endl;
+    }
+
+
+    for(it = myHills.begin();it < myHills.end(); it++){
+        bug << "Hill row " <<it->row << " col " << it->col << endl << endl;
+    }
+
+
+    for(it = defenders.begin();it < defenders.end(); it++){
+        bug << "Defender row " <<it->row << " col " << it->col << endl << endl;
+    }
 
 }
+
 
 
 void State::checkForDeadEnds(const int row, const int col){
@@ -343,7 +567,7 @@ ostream& operator<<(ostream &os, const State &state)
         for(int col=0; col<state.cols; col++)
         {
             if(state.grid[row][col].priority > -1){
-                os << char(state.grid[row][col].priority+48);
+                os << char(state.grid[row][col].defensepriority+48);
             }
             else{
                 os << '~';

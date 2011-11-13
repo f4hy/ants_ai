@@ -29,20 +29,29 @@ const int EAST = 1;
 const int SOUTH = 2;
 const int WEST = 3;
 
-const int PriFood = 10;
+const int PriFood = 50;
 const int PriHill = -100;
-const int PriBadHill = 80;
-const int PriBadAnt = -1;
-const int PriAnt = 3;
+const int PriBadHill = 100;
+const int PriBadAnt = -25;
+const int PriAnt = -10;
+const int PriBadAntAttack = 25;
+const int PriAntAttack = 40;
 
-const int RadFood = 10;
+const int RadFood = 12;
 const int RadHill = 0;
-const int RadBadHill = 80;
-const int RadBadAnt = 2;
-const int RadAnt = 0;
+const int RadBadHill = 100;
+const int RadBadAnt = 3;
+const int RadAnt = 2;
+const int RadBadAntAttack = 2;
+const int RadAntAttack = 3;
 
 // Added to squares already visited
 const int PriStuck = -10;
+
+const int defenderThreshhold = 9;
+
+const int defenseDistance = 10;
+const int maxDefenders = 6;
 
 
 // Added to priority of open squares next to water
@@ -71,7 +80,12 @@ struct State
 
     std::vector<Location> priorityUpdateThisRound;
 
+    int numberOfDefenders;
+    std::vector<Location> defenders;
 
+    std::vector<Location> edge_of_view;
+
+    
     Timer timer;
     Bug bug;
 
@@ -85,15 +99,28 @@ struct State
     void reset();
 
     void setPriorities();
+    void setDefenders();
+    
     void priorityradius(const int priority, const Location loc,const int radius );
     void setpriorityrow(const int priority, const Location loc,const int length );
     void priorityradiusBFS(const int priority, const Location loc,const int radius );
 
+//    Location chooseAntBFS(const Location loc, const int targetType );
+//    std::vector<Location>::iterator findClosestInBFS(const Location loc, std::vector<Location> haystack  );
+   Location findClosestInBFS(const Location loc, std::vector<Location> haystack  );
+
+    void priorityDefense(const Location loc);
+
+    
     void checkForDeadEnds(const int row, const int col);
 
-    void makeMove(const Location &loc, int direction);
+    void makeMove(const Location &loc, int direction, bool antistuck= true);
 
     double distance(const Location &loc1, const Location &loc2);
+
+    int taxidistance(const Location &loc1, const Location &loc2);
+
+
     Location getLocation(const Location &startLoc, int direction);
 
     void updateVisionInformation();
