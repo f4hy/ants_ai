@@ -42,7 +42,7 @@ void State::reset()
 
 
 
-    
+
     food.clear();
     defenders.clear();
     edge_of_view.clear();
@@ -191,6 +191,102 @@ Location State::findClosestInBFS(const Location loc, vector<Location> haystack  
 }
 
 
+Path State::Dijkstra(const Location loc, vector<Location> haystack  ){
+
+    priority_queue<PriLocation > locQ;
+
+    updateIndex++;
+
+
+    std::vector<Location>::iterator it = std::find(haystack.begin(),haystack.end(),loc);
+    if(it != haystack.end()){
+        bug << "find needle row " <<it->row << " col " << it->col << endl << endl;
+        return Path(loc);
+    }
+
+    PriLocation start = PriLocation(loc,0);
+
+    locQ.push(start);
+
+    grid[loc.row][loc.col].updateIndex = updateIndex;
+
+
+    int heuristic;
+
+    while (!locQ.empty()){
+
+        PriLocation currentLoc = locQ.top();
+
+        bug<< "now serveing: " << currentLoc.priority << endl;
+
+        locQ.pop();
+
+        for(int d=0; d<NUMDIRECTIONS; d++){
+            Location nLoc = getLocation(currentLoc,d);
+            if((grid[nLoc.row][nLoc.col].updateIndex != updateIndex) && !(grid[nLoc.row][nLoc.col].isWater)){
+
+
+                it = std::find(haystack.begin(),haystack.end(),nLoc);
+
+                if(it == haystack.end()){
+                    grid[nLoc.row][nLoc.col].updateIndex = updateIndex;
+                    grid[nLoc.row][nLoc.col].parent = REVERSE[d];
+
+                    //int heuristic  = -taxidistance(nLoc,start)*(1+100*grid[nLoc.row][nLoc.col].isVisible);
+
+                    if(grid[nLoc.row][nLoc.col].isVisible){
+                        heuristic = -taxidistance(nLoc,start);
+                    }
+                    else{
+                        heuristic = -taxidistance(nLoc,start) * 3;
+                    }
+
+                    locQ.push(PriLocation(nLoc,heuristic));
+                }
+                else{
+                    bug << "in find needle row " <<it->row << " col " << it->col << endl << endl;
+
+                    vector<int> steps;
+
+                    Location start = nLoc;
+                    Location end = loc;
+
+                    int direction;
+
+                    bug << "reverse?" << endl;
+
+                    grid[nLoc.row][nLoc.col].parent = REVERSE[d];
+                    bug << "reverse!" << REVERSE[d] << endl;
+                    while(nLoc != loc){
+                        direction = grid[nLoc.row][nLoc.col].parent;
+                        bug << "parent" << direction << endl;
+                        steps.push_back(direction);
+                        if (direction < 0){
+                            throw;
+
+                        }
+
+                        nLoc = getLocation(nLoc,direction);
+                        bug << "nloc " <<nLoc.row << " col " << nLoc.col << endl;
+                        bug << "loc " <<loc.row << " col " << loc.col << endl << endl;
+                    }
+
+                    return Path(start,end,steps);
+
+                }
+
+
+
+            }
+        }
+    }
+
+    return Path(loc);      // Did not find it, just return where we started
+
+
+} // End Dijkstra
+
+
 
 void State::priorityradiusBFS(const int priority, const Location loc,const int radius ){
 
@@ -305,6 +401,43 @@ void State::priorityDefense(const Location loc){
     }
 }
 
+void State::foodPathing(){
+
+    Path testpath;
+
+    vector<Location>::iterator it;
+
+
+    bug << "Testing path to food" << endl;
+    // for(it = food.begin();it < food.end(); it ++){
+    //     testpath = Dijkstra(*it,myAnts);
+    // }
+    testpath = Dijkstra(*food.begin(),myAnts);
+
+
+
+    bug << "path done" << endl;
+    bug << "start" << testpath.start.row << " " << testpath.start.col << endl;
+    bug << "end" << testpath.end.row << " " << testpath.end.col << endl;
+    for(    vector<int>::iterator itr = testpath.steps.begin();itr < testpath.steps.end(); itr ++){
+        bug << "steps " << CDIRECTIONS[*itr]  << endl;
+    }
+
+    grid[testpath.start.row][testpath.start.col].priority = 1;
+    Location nLoc = testpath.start;
+    for(    vector<int>::iterator itr = testpath.steps.begin();itr < testpath.steps.end(); itr ++){
+        bug << "steps " << CDIRECTIONS[*itr]  << endl;
+        nLoc = getLocation(nLoc,*itr);
+        grid[nLoc.row][nLoc.col].priority = 2;
+
+    }
+    gatherer.push_back(testpath); // Add to defenders
+    vector<Location>::iterator foundAnt = find(myAnts.begin(),myAnts.end(),testpath.start);
+    myAnts.erase(foundAnt); // no longer a regular ant.
+    
+    
+}
+
 void State::setPriorities(){
     bug << "setting priority" <<endl;
 
@@ -321,7 +454,7 @@ void State::setPriorities(){
     for(it = edge_of_view.begin();it < edge_of_view.end(); it ++){
         priorityradiusBFS(viewradius*2,*it, viewradius*2);
     }
-    
+
 
     // priorityradiusBFS(4,*myHills.begin(), 4);
     // priorityradiusBFS(2,*food.begin(), 2);
@@ -332,7 +465,7 @@ void State::setPriorities(){
         priorityradiusBFS(1000,*it, 3);
         count+= 10;
 
-        
+
         for(ant = myAnts.begin();ant < myAnts.end(); ant ++){
             int d = (int)(distance(*it,*ant));
             if(d>3 && d<RadBadHill/count){
@@ -355,23 +488,20 @@ void State::setPriorities(){
         for(it = enemyAnts.begin();it < enemyAnts.end(); it ++){
             priorityradius(PriBadAnt,*it, RadBadAnt);
         }
-    }    
-    
+    }
 
-    
-    
 
-    
+
 }
 
 void State::setDefenders(){
     bug << "setting defenders" <<endl;
 
     if(myHills.size() < 1){return;}
-    
+
     numberOfDefenders = myAnts.size() / (defenderThreshhold*myHills.size());
 
-    if(numberOfDefenders > (maxDefenders*myHills.size()) ){ 
+    if(numberOfDefenders > (maxDefenders*myHills.size()) ){
         numberOfDefenders = maxDefenders*myHills.size();
     }
 
@@ -394,37 +524,37 @@ void State::setDefenders(){
         for(it = myHills.begin();it < myHills.end(); it++){
 
             if(grid[it->row][it->col].ant != 0){
-            
-            bug << "num def's : i" << numberOfDefenders << "  " << i <<endl ;
-            
-            Location needle = findClosestInBFS(*it,myAnts);
-            bug << "needle row " <<needle.row << " col " << needle.col << endl << endl;
 
-            vector<Location>::iterator foundAnt = find(myAnts.begin(),myAnts.end(),needle);
+                bug << "num def's : i" << numberOfDefenders << "  " << i <<endl ;
 
-            if(grid[foundAnt->row][foundAnt->col].ant != 0){
-                bug << "error!! Tried to add no existant defender";
-                return;
-            }
+                Location needle = findClosestInBFS(*it,myAnts);
+                bug << "needle row " <<needle.row << " col " << needle.col << endl << endl;
 
-            if(distance(*foundAnt,*it) > defenseDistance){
-                bug << "Closest defender too far, wait for new defender" << endl;
-                return;
-            }
+                vector<Location>::iterator foundAnt = find(myAnts.begin(),myAnts.end(),needle);
+
+                if(grid[foundAnt->row][foundAnt->col].ant != 0){
+                    bug << "error!! Tried to add no existant defender";
+                    return;
+                }
+
+                if(distance(*foundAnt,*it) > defenseDistance){
+                    bug << "Closest defender too far, wait for new defender" << endl;
+                    return;
+                }
 
 
-            defenders.push_back(*foundAnt); // Add to defenders
+                defenders.push_back(*foundAnt); // Add to defenders
 
-            myAnts.erase(foundAnt); // no longer a regular ant.
+                myAnts.erase(foundAnt); // no longer a regular ant.
 
             }
 
             i++;
             if(i>=numberOfDefenders){break;}
-            
+
         }
     }
-    
+
 
     // check
     bug<< "myant after size" << myAnts.size() <<endl;
@@ -563,12 +693,21 @@ ostream& operator<<(ostream &os, const State &state)
         for(int col=0; col<state.cols; col++)
         {
             if(state.grid[row][col].priority > -1){
-                os << char(state.grid[row][col].defensepriority+48);
+                os << (char)('0' + state.grid[row][col].priority);
             }
             else{
                 os << '~';
             }
         }
+        // for(int col=0; col<state.cols; col++)
+        // {
+        //     if(state.grid[row][col].parent > -1){
+        //         os << CDIRECTIONS[(state.grid[row][col].parent)];
+        //     }
+        //     else{
+        //         os << '.';
+        //     }
+        // }
         os << endl;
     }
 

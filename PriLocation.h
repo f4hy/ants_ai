@@ -1,32 +1,9 @@
-#ifndef LOCATION_H_
-#define LOCATION_H_
+#ifndef PRILOCATION_H_
+#define PRILOCATION_H_
 
 /*
   struct for representing locations in the grid.
 */
-struct Location
-{
-    int row, col;
-
-    Location(){
-        row = col = 0;
-    };
-
-    Location(int r, int c){
-        row = r;
-        col = c;
-    };
-
-    bool operator==(const Location &other) const {
-        return (row == other.row && col == other.col);
-    }
-
-    bool operator!=(const Location &other) const {
-        return (row != other.row || col != other.col);
-    }
-
-};
-
 struct PriLocation : Location
 {
     int priority;
@@ -35,19 +12,9 @@ struct PriLocation : Location
         priority = 0;
     };
 
-    PriLocation(int r, int c, int p){
-        row = r;
-        col = c;
+    PriLocation(Location l ,int p){
         priority = p;
     };
-
-    PriLocation(Location l, int p){
-        row = l.row;
-        col = l.col;
-        priority = p;
-    };
-
-    
 
 
     bool operator>(const PriLocation &other) const {
@@ -60,7 +27,6 @@ struct PriLocation : Location
 
 
 };
-
 
 // bool operator== ( const Nick &n1, const Nick &n2) 
 // {
@@ -76,4 +42,4 @@ struct PriLocation : Location
 // }
 
 
-#endif //LOCATION_H_
+#endif //PRILOCATION_H_

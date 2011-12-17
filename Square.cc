@@ -8,6 +8,8 @@ Square::Square()
     permpriority = 0;
     defensepriority = 0;
     updateIndex =0;
+
+    parent = -1;
 };
 
 void Square::reset()
@@ -23,5 +25,7 @@ void Square::reset()
     ant = hillPlayer = -1;
     deadAnts.clear();
 
+    parent = -1;
+    
 };
 

@@ -15,7 +15,12 @@ struct Square
     int permpriority;
     int defensepriority;
     int updateIndex;
+
+
+
     std::vector<int> deadAnts;
+
+    int parent;
     
     // Initializes values.
     Square();

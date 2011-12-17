@@ -20,7 +20,10 @@ void Bot::playGame()
     while(cin >> state)
     {
         state.updateVisionInformation();
-        state.setPriorities();
+        // state.setPriorities();
+
+        state.foodPathing();
+
         state.setDefenders();
         makeMoves();
         endTurn();
@@ -31,7 +34,7 @@ void Bot::playGame()
 void Bot::makeMoves()
 {
     state.bug << "turn " << state.turn << ":" << endl;
-    // state.bug << state << endl;
+    state.bug << state << endl;
 
 
 

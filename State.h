@@ -16,6 +16,7 @@
 #include "Bug.h"
 #include "Square.h"
 #include "Location.h"
+#include "Path.h"
 
 /*
   constants
@@ -28,6 +29,9 @@ const int NORTH = 0;
 const int EAST = 1;
 const int SOUTH = 2;
 const int WEST = 3;
+
+const int REVERSE[4] = {2,3,0,1}; // Gives the reverse of the int direction
+
 
 const int PriFood = 50;
 const int PriHill = -100;
@@ -48,7 +52,7 @@ const int RadAntAttack = 3;
 // Added to squares already visited
 const int PriStuck = -10;
 
-const int defenderThreshhold = 5;
+const int defenderThreshhold = 8;
 
 const int defenseDistance = 10;
 const int maxDefenders = 6;
@@ -76,13 +80,18 @@ struct State
     int updateIndex;
     
     std::vector<std::vector<Square> > grid;
-    std::vector<Location> myAnts, enemyAnts, myHills, enemyHills, food;
+    std::vector<Location>  enemyAnts, myHills, enemyHills, food;
 
+    std::list<Location> myAnts;
+    
     std::vector<Location> priorityUpdateThisRound;
 
     int numberOfDefenders;
     std::vector<Location> defenders;
 
+    std::vector<Path> gatherer;
+
+    
     std::vector<Location> edge_of_view;
 
     
@@ -98,6 +107,9 @@ struct State
     void setup();
     void reset();
 
+
+    void foodPathing();
+
     void setPriorities();
     void setDefenders();
     
@@ -109,6 +121,8 @@ struct State
 //    std::vector<Location>::iterator findClosestInBFS(const Location loc, std::vector<Location> haystack  );
    Location findClosestInBFS(const Location loc, std::vector<Location> haystack  );
 
+    Path Dijkstra(const Location loc, std::vector<Location> haystack  );
+    
     void priorityDefense(const Location loc);
 
     
