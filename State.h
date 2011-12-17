@@ -18,6 +18,7 @@
 #include "Square.h"
 #include "Location.h"
 #include "Path.h"
+#include "Combat.h"
 
 /*
   constants
@@ -73,7 +74,8 @@ struct State
     int rows, cols,
         turn, turns,
         noPlayers;
-    double attackradius, spawnradius, viewradius;
+    double spawnradius, viewradius;
+    int attackradius;
     double loadtime, turntime;
     std::vector<double> scores;
     bool gameover;
@@ -95,6 +97,7 @@ struct State
     
     std::vector<Location> edge_of_view;
 
+    std::vector<Combat> combats;
     
     Timer timer;
     Bug bug;
@@ -113,6 +116,8 @@ struct State
 
     void setPriorities();
     void setDefenders();
+
+    void basicCombat();
     
     void priorityradius(const int priority, const Location loc,const int radius );
     void setpriorityrow(const int priority, const Location loc,const int length );
@@ -120,7 +125,10 @@ struct State
 
 //    Location chooseAntBFS(const Location loc, const int targetType );
 //    std::vector<Location>::iterator findClosestInBFS(const Location loc, std::vector<Location> haystack  );
+
     Location findClosestInBFS(const Location loc, std::vector<Location> haystack  );
+
+    std::vector<Location> findAllAnts(const Location loc,const bool friendly ,const int distance);
     
     Path Dijkstra(const Location loc, std::vector<Location> haystack  );
     

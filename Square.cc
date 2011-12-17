@@ -1,5 +1,9 @@
 #include "Square.h"
 
+// Ant=0 is friendly
+// Ant=-1 is no ant
+// Ant>1 is enemy
+
 Square::Square()
 {
     isVisible = isWater = isHill = isFood = 0;

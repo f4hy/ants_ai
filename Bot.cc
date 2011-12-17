@@ -26,6 +26,10 @@ void Bot::playGame()
         state.foodPathing();
         state.bug << "time taken after foodpathing: " << state.timer.getTime() << "ms" << endl << endl;
 
+        state.basicCombat();
+        state.bug << "time taken after combat: " << state.timer.getTime() << "ms" << endl << endl;
+
+        
         state.setDefenders();
         state.bug << "time taken after defnders: " << state.timer.getTime() << "ms" << endl << endl;
         makeMoves();
