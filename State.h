@@ -10,6 +10,7 @@
 #include <queue>
 #include <stack>
 #include <algorithm>
+#include <list>
 
 
 #include "Timer.h"
@@ -82,7 +83,7 @@ struct State
     std::vector<std::vector<Square> > grid;
     std::vector<Location>  enemyAnts, myHills, enemyHills, food;
 
-    std::list<Location> myAnts;
+    std::vector<Location> myAnts;
     
     std::vector<Location> priorityUpdateThisRound;
 
@@ -119,8 +120,8 @@ struct State
 
 //    Location chooseAntBFS(const Location loc, const int targetType );
 //    std::vector<Location>::iterator findClosestInBFS(const Location loc, std::vector<Location> haystack  );
-   Location findClosestInBFS(const Location loc, std::vector<Location> haystack  );
-
+    Location findClosestInBFS(const Location loc, std::vector<Location> haystack  );
+    
     Path Dijkstra(const Location loc, std::vector<Location> haystack  );
     
     void priorityDefense(const Location loc);

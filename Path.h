@@ -2,6 +2,7 @@
 #define PATH_H_
 
 #include <vector>
+#include <list>
 
 
 /*
@@ -13,7 +14,9 @@ struct Path
     Location start;
     Location end;
 
-    std::vector<int> steps;
+    std::list<int> testlist;
+    
+    std::list<int> steps;
 
     Path(){
     }
@@ -25,12 +28,20 @@ struct Path
             
     }
     
-    Path(Location st, Location e,std::vector<int> sp ){
+    Path(Location st, Location e,std::list<int> sp ){
         start = st;
         end = e;
         steps = sp;
     };
 
+    void reverse(void){
+        Location tmp;
+        tmp = start;
+        start = end;
+        end = tmp;
+        steps.reverse();
+    };
+    
 };
 
 #endif //PATH_H_

@@ -20,12 +20,16 @@ void Bot::playGame()
     while(cin >> state)
     {
         state.updateVisionInformation();
-        // state.setPriorities();
-
+        state.bug << "time taken after vision: " << state.timer.getTime() << "ms" << endl << endl;
+        state.setPriorities();
+        state.bug << "time taken after priorities: " << state.timer.getTime() << "ms" << endl << endl;
         state.foodPathing();
+        state.bug << "time taken after foodpathing: " << state.timer.getTime() << "ms" << endl << endl;
 
         state.setDefenders();
+        state.bug << "time taken after defnders: " << state.timer.getTime() << "ms" << endl << endl;
         makeMoves();
+        state.bug << "time taken after makemoves: " << state.timer.getTime() << "ms" << endl << endl;
         endTurn();
     }
 };
@@ -36,7 +40,15 @@ void Bot::makeMoves()
     state.bug << "turn " << state.turn << ":" << endl;
     state.bug << state << endl;
 
+    state.bug << "gathers" << state.gatherer.size() << endl;
+    state.bug << "myants" << state.myAnts.size() << endl;
+    
+    for(vector<Path>::iterator itr = state.gatherer.begin();itr < state.gatherer.end(); itr++){
+        state.makeMove(itr->start, *(itr->steps.begin()), false);
+        state.bug << "gatherer row " <<itr->start.row << " col " << itr->start.col << endl << endl;
 
+
+    }
 
     for(int ant=0; ant<(int)state.defenders.size(); ant++){
         int moveToMake = -1;

@@ -1,5 +1,6 @@
 #include "State.h"
 
+
 using namespace std;
 
 //constructor
@@ -41,7 +42,7 @@ void State::reset()
     // enemyHills.clear();
 
 
-
+    gatherer.clear();
 
     food.clear();
     defenders.clear();
@@ -197,6 +198,7 @@ Path State::Dijkstra(const Location loc, vector<Location> haystack  ){
 
     updateIndex++;
 
+    bug << "starting dijkstra" << endl;
 
     std::vector<Location>::iterator it = std::find(haystack.begin(),haystack.end(),loc);
     if(it != haystack.end()){
@@ -238,7 +240,7 @@ Path State::Dijkstra(const Location loc, vector<Location> haystack  ){
                         heuristic = -taxidistance(nLoc,start);
                     }
                     else{
-                        heuristic = -taxidistance(nLoc,start) * 3;
+                        heuristic = -taxidistance(nLoc,start) * 6;
                     }
 
                     locQ.push(PriLocation(nLoc,heuristic));
@@ -246,7 +248,7 @@ Path State::Dijkstra(const Location loc, vector<Location> haystack  ){
                 else{
                     bug << "in find needle row " <<it->row << " col " << it->col << endl << endl;
 
-                    vector<int> steps;
+                    list<int> steps;
 
                     Location start = nLoc;
                     Location end = loc;
@@ -262,10 +264,12 @@ Path State::Dijkstra(const Location loc, vector<Location> haystack  ){
                         bug << "parent" << direction << endl;
                         steps.push_back(direction);
                         if (direction < 0){
+                            bug << "throwing exceptin because direction fail" << endl;
                             throw;
 
                         }
 
+                        
                         nLoc = getLocation(nLoc,direction);
                         bug << "nloc " <<nLoc.row << " col " << nLoc.col << endl;
                         bug << "loc " <<loc.row << " col " << loc.col << endl << endl;
@@ -407,35 +411,41 @@ void State::foodPathing(){
 
     vector<Location>::iterator it;
 
+    for(vector<Location>::iterator fooditr = food.begin();fooditr < food.end(); fooditr ++){
+        bug << "Testing path to food" << endl;
+        // for(it = food.begin();it < food.end(); it ++){
+        //     testpath = Dijkstra(*it,myAnts);
+        // }
 
-    bug << "Testing path to food" << endl;
-    // for(it = food.begin();it < food.end(); it ++){
-    //     testpath = Dijkstra(*it,myAnts);
-    // }
-    testpath = Dijkstra(*food.begin(),myAnts);
+        bug << "Dijkstra about to start?" << endl; 
+        if(myAnts.size() < 1){
+            break;
+        }
+        testpath = Dijkstra(*fooditr,myAnts);
+        bug << "Dijkstra passed " << endl; 
 
 
+        bug << "path done" << endl;
+        bug << "start" << testpath.start.row << " " << testpath.start.col << endl;
+        bug << "end" << testpath.end.row << " " << testpath.end.col << endl;
+        // for(    list<int>::iterator itr = testpath.steps.begin();itr < testpath.steps.end(); itr ++){
+        //     bug << "steps " << CDIRECTIONS[*itr]  << endl;
+        // }
 
-    bug << "path done" << endl;
-    bug << "start" << testpath.start.row << " " << testpath.start.col << endl;
-    bug << "end" << testpath.end.row << " " << testpath.end.col << endl;
-    for(    vector<int>::iterator itr = testpath.steps.begin();itr < testpath.steps.end(); itr ++){
-        bug << "steps " << CDIRECTIONS[*itr]  << endl;
+        // grid[testpath.start.row][testpath.start.col].priority = 1;
+        // Location nLoc = testpath.start;
+        // for(    list<int>::iterator itr = testpath.steps.begin();itr < testpath.steps.end(); itr ++){
+        //     bug << "steps " << CDIRECTIONS[*itr]  << endl;
+        //     nLoc = getLocation(nLoc,*itr);
+        //     grid[nLoc.row][nLoc.col].priority = 2;
+
+        // }
+        gatherer.push_back(testpath); // Add to gatherer
+        vector<Location>::iterator foundAnt = find(myAnts.begin(),myAnts.end(),testpath.start);
+        bug << "trying to erase";
+        myAnts.erase(foundAnt); // no longer a regular ant.
+        bug << "erased" << endl;
     }
-
-    grid[testpath.start.row][testpath.start.col].priority = 1;
-    Location nLoc = testpath.start;
-    for(    vector<int>::iterator itr = testpath.steps.begin();itr < testpath.steps.end(); itr ++){
-        bug << "steps " << CDIRECTIONS[*itr]  << endl;
-        nLoc = getLocation(nLoc,*itr);
-        grid[nLoc.row][nLoc.col].priority = 2;
-
-    }
-    gatherer.push_back(testpath); // Add to defenders
-    vector<Location>::iterator foundAnt = find(myAnts.begin(),myAnts.end(),testpath.start);
-    myAnts.erase(foundAnt); // no longer a regular ant.
-    
-    
 }
 
 void State::setPriorities(){
@@ -443,16 +453,16 @@ void State::setPriorities(){
 
     vector<Location>::iterator it;
     vector<Location>::iterator ant;
-    for(it = food.begin();it < food.end(); it ++){
-        priorityradiusBFS(PriFood,*it, RadFood);
-    }
+    // for(it = food.begin();it < food.end(); it ++){
+    //     priorityradiusBFS(PriFood,*it, RadFood);
+    // }
     for(it = myHills.begin();it < myHills.end(); it++){
         priorityradiusBFS(PriHill,*it, RadHill);
         priorityDefense(*it);
     }
 
     for(it = edge_of_view.begin();it < edge_of_view.end(); it ++){
-        priorityradiusBFS(viewradius*2,*it, viewradius*2);
+        priorityradiusBFS(viewradius*4,*it, viewradius*8);
     }
 
 
