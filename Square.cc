@@ -1,5 +1,9 @@
 #include "Square.h"
 
+// Ant=0 is friendly
+// Ant=-1 is no ant
+// Ant>1 is enemy
+
 Square::Square()
 {
     isVisible = isWater = isHill = isFood = 0;
@@ -10,6 +14,9 @@ Square::Square()
     updateIndex =0;
 
     parent = -1;
+
+    moved = 0;
+    gatherer = 0;
 };
 
 void Square::reset()
@@ -26,6 +33,6 @@ void Square::reset()
     deadAnts.clear();
 
     parent = -1;
-    
+    moved = 0;
+    gatherer = 0;
 };
-

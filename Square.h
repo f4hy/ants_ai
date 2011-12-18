@@ -4,7 +4,7 @@
 #include <vector>
 
 /*
-    struct for representing a square in the grid.
+  struct for representing a square in the grid.
 */
 struct Square
 {
@@ -16,12 +16,13 @@ struct Square
     int defensepriority;
     int updateIndex;
 
-
+    int moved;
+    int gatherer;
 
     std::vector<int> deadAnts;
 
     int parent;
-    
+
     // Initializes values.
     Square();
 
