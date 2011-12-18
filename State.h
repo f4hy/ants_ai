@@ -121,8 +121,8 @@ struct State
 
     void basicCombat();
 
-    void priorityradius(const int priority, const Location loc,const int radius );
-    void setpriorityrow(const int priority, const Location loc,const int length );
+    // void priorityradius(const int priority, const Location loc,const int radius );
+    // void setpriorityrow(const int priority, const Location loc,const int length );
     void priorityradiusBFS(const int priority, const Location loc,const int radius );
 
 //    Location chooseAntBFS(const Location loc, const int targetType );
