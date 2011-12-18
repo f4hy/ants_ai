@@ -505,8 +505,6 @@ void State::foodPathing(){
         gatherer.push_back(testpath); // Add to gatherer
         vector<Location>::iterator foundAnt = find(myAnts.begin(),myAnts.end(),testpath.start);
         bug << "trying to erase";
-        myAnts.erase(foundAnt); // no longer a regular ant.
-        bug << "erased" << endl;
     }
 }
 
@@ -617,7 +615,7 @@ void State::setDefenders(){
 
                 defenders.push_back(*foundAnt); // Add to defenders
 
-                myAnts.erase(foundAnt); // no longer a regular ant.
+                // myAnts.erase(foundAnt); // no longer a regular ant.
 
             }
 
