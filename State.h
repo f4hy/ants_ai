@@ -81,12 +81,12 @@ struct State
     bool gameover;
 
     int updateIndex;
-    
+
     std::vector<std::vector<Square> > grid;
     std::vector<Location>  enemyAnts, myHills, enemyHills, food;
 
     std::vector<Location> myAnts;
-    
+
     std::vector<Location> priorityUpdateThisRound;
 
     int numberOfDefenders;
@@ -94,11 +94,11 @@ struct State
 
     std::vector<Path> gatherer;
 
-    
+
     std::vector<Location> edge_of_view;
 
     std::vector<Combat> combats;
-    
+
     Timer timer;
     Bug bug;
 
@@ -114,11 +114,13 @@ struct State
 
     void foodPathing();
 
+    void pathIntegrityCheck();
+
     void setPriorities();
     void setDefenders();
 
     void basicCombat();
-    
+
     void priorityradius(const int priority, const Location loc,const int radius );
     void setpriorityrow(const int priority, const Location loc,const int length );
     void priorityradiusBFS(const int priority, const Location loc,const int radius );
@@ -129,12 +131,12 @@ struct State
     Location findClosestInBFS(const Location loc, std::vector<Location> haystack  );
 
     std::vector<Location> findAllAnts(const Location loc,const bool friendly ,const int distance);
-    
+
     Path Dijkstra(const Location loc, std::vector<Location> haystack  );
-    
+
     void priorityDefense(const Location loc);
 
-    
+
     void checkForDeadEnds(const int row, const int col);
 
     void makeMove(const Location &loc, int direction, bool antistuck= true);

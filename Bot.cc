@@ -23,6 +23,8 @@ void Bot::playGame()
         state.bug << "time taken after vision: " << state.timer.getTime() << "ms" << endl << endl;
         state.setPriorities();
         state.bug << "time taken after priorities: " << state.timer.getTime() << "ms" << endl << endl;
+        state.setDefenders();
+        state.bug << "time taken after defnders: " << state.timer.getTime() << "ms" << endl << endl;
         state.foodPathing();
         state.bug << "time taken after foodpathing: " << state.timer.getTime() << "ms" << endl << endl;
 
@@ -30,8 +32,6 @@ void Bot::playGame()
         state.bug << "time taken after combat: " << state.timer.getTime() << "ms" << endl << endl;
 
 
-        state.setDefenders();
-        state.bug << "time taken after defnders: " << state.timer.getTime() << "ms" << endl << endl;
         makeMoves();
         state.bug << "time taken after makemoves: " << state.timer.getTime() << "ms" << endl << endl;
         endTurn();
@@ -41,20 +41,22 @@ void Bot::playGame()
 //makes the bots moves for the turn
 void Bot::makeMoves()
 {
-    state.bug << "turn " << state.turn << ":" << endl;
-    state.bug << state << endl;
+    state.bug << "turn " << state.turn << ":================================================" << endl;
+    // state.bug << state << endl;
 
     state.bug << "gathers" << state.gatherer.size() << endl;
     state.bug << "myants" << state.myAnts.size() << endl;
 
-    // gatherer movement
-    foodPathingMove();
+
+    // Defender movement
+    defenderMove();
 
     // combat movement
     combatMove();
 
-    // Defender movement
-    defenderMove();
+    // gatherer movement
+    foodPathingMove();
+
 
     //myAnts movement
     myAntMove();
@@ -110,7 +112,9 @@ void Bot::combatMove(){
         }else{
             state.bug << "no good combat move founnd" << endl;
         }
-
+        if(moveToMake == -1 && c.numfriendlyinrangeofbad < c.numenemiesinrangeofgood){
+            state.grid[c.friendlyAnt.row][c.friendlyAnt.col].moved= 1;
+        }
     } // End loop over combats
 
 }
@@ -155,6 +159,11 @@ void Bot::defenderMove(){
     vector<Location>::iterator it;
 
     for(it = state.defenders.begin();it < state.defenders.end(); it++){
+
+        if(state.grid[it->row][it->col].moved > 0){
+            continue;
+        }
+
         int moveToMake = -1;
         for(int d=0; d<NUMDIRECTIONS; d++)
         {
@@ -173,21 +182,48 @@ void Bot::defenderMove(){
         }
         if (moveToMake != -1){
             state.makeMove((*it), moveToMake, false);
+        }else{
+            state.grid[it->row][it->col].moved = 1;
         }
     }
 }
 
 void Bot::foodPathingMove(){
+    for(vector<Location>::iterator it = state.myAnts.begin();it < state.myAnts.end(); it++){
+        state.bug << "before food pathing ants are" << it->row << " " << it->col << endl;
+    }
     for(vector<Path>::iterator itr = state.gatherer.begin();itr < state.gatherer.end(); itr++){
+
+        state.bug << "food pathing from" << itr->start.row << " " << itr->start.col << endl;
+
         if(state.grid[itr->start.row][itr->start.col].moved > 0){
+            state.gatherer.erase(itr);
+            continue;
+        }
+        if (itr->steps.size() <1){
+            state.gatherer.erase(itr);
             continue;
         }
         Location loc = state.getLocation(itr->start, *(itr->steps.begin()));
-        if(!state.grid[loc.row][loc.col].isWater && state.grid[loc.row][loc.col].ant != 0){
+        if(!state.grid[loc.row][loc.col].isWater && state.grid[loc.row][loc.col].ant != 0 ){
             state.makeMove(itr->start, *(itr->steps.begin()), false);
-            state.bug << "gatherer row " <<itr->start.row << " col " << itr->start.col << endl << endl;
+            state.bug << "foodpathing from" << itr->start.row <<" " << itr->start.col << " moving " <<  *(itr->steps.begin()) << endl;
+
+            if (itr->steps.size() <1){
+                state.gatherer.erase(itr);
+            }
+            else{
+                Location newstart = state.getLocation(itr->start,*(itr->steps.begin()));
+                itr->move(newstart);
+                state.bug << "after moving " << *(itr->steps.begin()) << " " <<itr->start.row << " col " << itr->start.col << endl << endl;
+            }
+        }
+        else{
+            state.gatherer.erase(itr);
         }
     }
+
+
 }
 
 //finishes the turn

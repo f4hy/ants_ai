@@ -42,9 +42,11 @@ void State::reset()
     // enemyHills.clear();
 
 
-    gatherer.clear();
+    // gatherer.clear();
+    //pathIntegrityCheck();
+
     combats.clear();
-    
+
     food.clear();
     defenders.clear();
     edge_of_view.clear();
@@ -197,7 +199,7 @@ Location State::findClosestInBFS(const Location loc, vector<Location> haystack  
 std::vector<Location> State::findAllAnts(const Location loc,const bool friendly ,const int distance ){
 
     bug << "starting all ants with " << distance << endl;
-    
+
     queue<Location> locQ;
     std::vector<Location> foundAnts;
 
@@ -219,9 +221,9 @@ std::vector<Location> State::findAllAnts(const Location loc,const bool friendly 
             {
                 continue;
             }
-            
+
             if((grid[nLoc.row][nLoc.col].updateIndex != updateIndex) && !(grid[nLoc.row][nLoc.col].isWater)){
-                
+
                 if(friendly){
                     if(grid[nLoc.row][nLoc.col].ant == 0){
                         bug << "allants found" << nLoc.row << ", " << nLoc.col << endl;
@@ -279,11 +281,22 @@ Path State::Dijkstra(const Location loc, vector<Location> haystack  ){
         for(int d=0; d<NUMDIRECTIONS; d++){
             Location nLoc = getLocation(currentLoc,d);
             if((grid[nLoc.row][nLoc.col].updateIndex != updateIndex) && !(grid[nLoc.row][nLoc.col].isWater)){
+                // Found gatherer twice
+                if(grid[nLoc.row][nLoc.col].gatherer == 1){
+                    bug << "Refound " << nLoc.row << " " << nLoc.col << endl;
+                    for(vector<Path>::iterator itr = gatherer.begin();itr < gatherer.end(); itr++){
 
+                        if (taxidistance(nLoc,loc) < taxidistance(itr->start,loc)){
+                            gatherer.erase(itr);
+                            grid[nLoc.row][nLoc.col].gatherer == 0;
+                            food.push_back(itr->end);
+                        }
+                    }
+                }
 
                 it = std::find(haystack.begin(),haystack.end(),nLoc);
 
-                if(it == haystack.end()){
+                if(it == haystack.end() || grid[nLoc.row][nLoc.col].gatherer == 1){
                     grid[nLoc.row][nLoc.col].updateIndex = updateIndex;
                     grid[nLoc.row][nLoc.col].parent = REVERSE[d];
 
@@ -322,13 +335,14 @@ Path State::Dijkstra(const Location loc, vector<Location> haystack  ){
 
                         }
 
-                        
+
                         nLoc = getLocation(nLoc,direction);
                         // bug << "nloc " <<nLoc.row << " col " << nLoc.col << endl;
                         // bug << "loc " <<loc.row << " col " << loc.col << endl << endl;
                     }
+                    int d = taxidistance(start,end);
 
-                    return Path(start,end,steps);
+                    return Path(start,end,steps,d);
 
                 }
 
@@ -460,14 +474,22 @@ void State::priorityDefense(const Location loc){
 
 void State::foodPathing(){
 
+
+
     if(myAnts.size() < food.size()){
         bug << "not enough ants for real pathing" << endl;
-        vector<Location>::iterator it;
-        for(it = food.begin();it < food.end(); it ++){
-            priorityradiusBFS(PriFood,*it, RadFood);
-        }
         return;
     }
+
+    pathIntegrityCheck();
+
+    for(vector<Path>::iterator itr = gatherer.begin();itr < gatherer.end(); itr++){
+        std::vector<Location>::iterator needle = std::find(food.begin(),food.end(),itr->end);
+        if(needle != food.end()){
+            food.erase(needle);
+        }
+    }
+
 
     Path testpath;
 
@@ -479,13 +501,16 @@ void State::foodPathing(){
         //     testpath = Dijkstra(*it,myAnts);
         // }
 
-        bug << "Dijkstra about to start?" << endl; 
+
+
+        bug << "Dijkstra about to start?" << endl;
         if(myAnts.size() < 1){
             break;
         }
         testpath = Dijkstra(*fooditr,myAnts);
-        bug << "Dijkstra passed " << endl; 
+        bug << "Dijkstra passed " << endl;
 
+        grid[testpath.start.row][testpath.start.col].gatherer = 1;
 
         bug << "path done" << endl;
         bug << "start" << testpath.start.row << " " << testpath.start.col << endl;
@@ -503,11 +528,42 @@ void State::foodPathing(){
 
         // }
         gatherer.push_back(testpath); // Add to gatherer
-        vector<Location>::iterator foundAnt = find(myAnts.begin(),myAnts.end(),testpath.start);
-        bug << "trying to erase";
-        myAnts.erase(foundAnt); // no longer a regular ant.
-        bug << "erased" << endl;
+        // vector<Location>::iterator foundAnt = find(myAnts.begin(),myAnts.end(),testpath.start);
+        // bug << "trying to erase";
+
+        bug << "start" << testpath.start.row << " " << testpath.start.col << endl;
+        bug << "end" << testpath.end.row << " " << testpath.end.col << endl;
+        Location tloc = testpath.start;
+
+        for(list<int>::iterator tit = testpath.steps.begin(); tit != testpath.steps.end(); tit++){
+            tloc = getLocation(tloc,*tit);
+            bug << "after a step" << tloc.row << " " << tloc.col << endl;
+        }
     }
+}
+
+void State::pathIntegrityCheck(){
+    for(vector<Path>::iterator itr = gatherer.begin();itr < gatherer.end(); itr++){
+
+        if(!grid[itr->end.row][itr->end.col].isFood){
+            bug << "revmoving path because gathered?" << itr->end.row << "," << itr->end.col << endl;
+            gatherer.erase(itr);
+            continue;
+        }
+
+        if(grid[itr->start.row][itr->start.col].ant != 0){
+            bug << "revmoving because ant died?" << itr->start.row << "," << itr->start.col << endl;
+            gatherer.erase(itr);
+            continue;
+        }
+        if(itr->steps.size() < 1 ){
+            bug << "Removing because out of steps" << itr->steps.front() << " " <<itr->steps.back() << endl;
+            gatherer.erase(itr);
+        }
+        grid[itr->start.row][itr->start.col].gatherer = 1;
+
+    }
+
 }
 
 void State::setPriorities(){
@@ -515,9 +571,9 @@ void State::setPriorities(){
 
     vector<Location>::iterator it;
     vector<Location>::iterator ant;
-    // for(it = food.begin();it < food.end(); it ++){
-    //     priorityradiusBFS(PriFood,*it, RadFood);
-    // }
+    for(it = food.begin();it < food.end(); it ++){
+        priorityradiusBFS(PriFood,*it, RadFood);
+    }
     for(it = myHills.begin();it < myHills.end(); it++){
         priorityradiusBFS(PriHill,*it, RadHill);
         priorityDefense(*it);
@@ -617,7 +673,7 @@ void State::setDefenders(){
 
                 defenders.push_back(*foundAnt); // Add to defenders
 
-                myAnts.erase(foundAnt); // no longer a regular ant.
+                // myAnts.erase(foundAnt); // no longer a regular ant.
 
             }
 
@@ -658,19 +714,19 @@ void State::basicCombat(){
 
     for(it = enemyAnts.begin();it < enemyAnts.end(); it++){
         bug << "enemy at " << it->row << "  " << it->col ;
-        bug << " value" << grid[it->row][it->row].ant << endl;        
+        bug << " value" << grid[it->row][it->row].ant << endl;
     }
     for(it = myAnts.begin();it < myAnts.end(); it++){
         bug << "frend at " << it->row << "  " << it->col;
-        bug << " value at" << grid[it->row][it->row].ant << endl;        
+        bug << " value at" << grid[it->row][it->row].ant << endl;
     }
 
-    
+
     for(it = enemyAnts.begin();it < enemyAnts.end(); it++){
 
         bug << "evaluating enemy " ;
         bug << "enemy row " <<it->row << " col " << it->col << endl << endl;
-        
+
         vector<Location> friendlys = findAllAnts(*it,true,attackradius);
         bug << "found friendlies " <<endl ;
 
@@ -690,8 +746,8 @@ void State::basicCombat(){
             // myAnts.erase(foundAnt);
             int numbadinrange = findAllAnts(*goodit,false,attackradius).size();
             bug << "counted bads " << numbadinrange <<endl ;
-            combats.push_back(Combat(*it,*goodit,numfriendinrange,numbadinrange));          
-                
+            combats.push_back(Combat(*it,*goodit,numfriendinrange,numbadinrange));
+
         }
     }
 }
@@ -809,24 +865,24 @@ ostream& operator<<(ostream &os, const State &state)
         os << ' ';
         os << '|';
         os << ' ';
-        for(int col=0; col<state.cols; col++)
-        {
-            if(state.grid[row][col].priority > -1){
-                os << (char)('0' + state.grid[row][col].priority);
-            }
-            else{
-                os << '~';
-            }
-        }
         // for(int col=0; col<state.cols; col++)
         // {
-        //     if(state.grid[row][col].parent > -1){
-        //         os << CDIRECTIONS[(state.grid[row][col].parent)];
+        //     if(state.grid[row][col].priority > -1){
+        //         os << (char)('0' + state.grid[row][col].priority);
         //     }
         //     else{
-        //         os << '.';
+        //         os << '~';
         //     }
         // }
+        for(int col=0; col<state.cols; col++)
+        {
+            if(state.grid[row][col].parent > -1){
+                os << CDIRECTIONS[(state.grid[row][col].parent)];
+            }
+            else{
+                os << '.';
+            }
+        }
         os << endl;
     }
 
