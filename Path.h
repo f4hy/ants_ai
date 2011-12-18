@@ -15,23 +15,26 @@ struct Path
     Location end;
 
     std::list<int> testlist;
-    
+
     std::list<int> steps;
+
+    int distance;
 
     Path(){
     }
-    
+
     Path(Location st ){
         start = st;
         end = st;
         steps.clear();
-            
+        distance = 0;
     }
-    
-    Path(Location st, Location e,std::list<int> sp ){
+
+    Path(Location st, Location e,std::list<int> sp ,int d){
         start = st;
         end = e;
         steps = sp;
+        distance = d;
     };
 
     void reverse(void){
@@ -41,7 +44,15 @@ struct Path
         end = tmp;
         steps.reverse();
     };
-    
+
+    void move(Location nloc){
+        if (steps.size() > 0){
+            steps.pop_front();
+        }
+        start = nloc;
+        distance--;
+    }
+
 };
 
 #endif //PATH_H_
