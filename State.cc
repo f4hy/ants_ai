@@ -289,6 +289,7 @@ Path State::Dijkstra(const Location loc, vector<Location> haystack  ){
                         if (taxidistance(nLoc,loc) < taxidistance(itr->start,loc)){
                             gatherer.erase(itr);
                             grid[nLoc.row][nLoc.col].gatherer == 0;
+                            food.push_back(itr->end);
                         }
                     }
                 }
