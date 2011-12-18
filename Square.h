@@ -16,7 +16,7 @@ struct Square
     int defensepriority;
     int updateIndex;
 
-
+    int moved;
 
     std::vector<int> deadAnts;
 

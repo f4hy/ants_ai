@@ -17,6 +17,9 @@ struct Bot
 
     
     void makeMoves();   //makes moves for a single turn
+
+    void combatmovement();
+
     void endTurn();     //indicates to the engine that it has made its moves
 };
 

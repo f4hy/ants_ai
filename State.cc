@@ -43,7 +43,8 @@ void State::reset()
 
 
     gatherer.clear();
-
+    combats.clear();
+    
     food.clear();
     defenders.clear();
     edge_of_view.clear();
@@ -66,6 +67,7 @@ void State::makeMove(const Location &loc, int direction, bool antistuck)
     Location nLoc = getLocation(loc, direction);
     grid[nLoc.row][nLoc.col].ant = grid[loc.row][loc.col].ant;
 
+    grid[loc.row][loc.col].moved = 1;
 
     // bug << "set " << nLoc.row << "," <<nLoc.col <<"to value" <<grid[nLoc.row][nLoc.col].ant << endl;
     grid[loc.row][loc.col].ant = -1;
@@ -194,6 +196,8 @@ Location State::findClosestInBFS(const Location loc, vector<Location> haystack  
 
 std::vector<Location> State::findAllAnts(const Location loc,const bool friendly ,const int distance ){
 
+    bug << "starting all ants with " << distance << endl;
+    
     queue<Location> locQ;
     std::vector<Location> foundAnts;
 
@@ -218,10 +222,14 @@ std::vector<Location> State::findAllAnts(const Location loc,const bool friendly 
             
             if((grid[nLoc.row][nLoc.col].updateIndex != updateIndex) && !(grid[nLoc.row][nLoc.col].isWater)){
                 
-                if(friendly && grid[nLoc.row][nLoc.col].ant == 0){
-                    foundAnts.push_back(nLoc);
+                if(friendly){
+                    if(grid[nLoc.row][nLoc.col].ant == 0){
+                        bug << "allants found" << nLoc.row << ", " << nLoc.col << endl;
+                        foundAnts.push_back(nLoc);
+                    }
                 }
                 else if(grid[nLoc.row][nLoc.col].ant > 0){
+                    bug << "allants found2" << nLoc.row << ", " << nLoc.col << endl;
                     foundAnts.push_back(nLoc);
                 }
                 grid[nLoc.row][nLoc.col].updateIndex = updateIndex;
@@ -452,6 +460,15 @@ void State::priorityDefense(const Location loc){
 
 void State::foodPathing(){
 
+    if(myAnts.size() < food.size()){
+        bug << "not enough ants for real pathing" << endl;
+        vector<Location>::iterator it;
+        for(it = food.begin();it < food.end(); it ++){
+            priorityradiusBFS(PriFood,*it, RadFood);
+        }
+        return;
+    }
+
     Path testpath;
 
     vector<Location>::iterator it;
@@ -640,6 +657,16 @@ void State::basicCombat(){
     // vector<Location>::iterator needle;
 
     for(it = enemyAnts.begin();it < enemyAnts.end(); it++){
+        bug << "enemy at " << it->row << "  " << it->col ;
+        bug << " value" << grid[it->row][it->row].ant << endl;        
+    }
+    for(it = myAnts.begin();it < myAnts.end(); it++){
+        bug << "frend at " << it->row << "  " << it->col;
+        bug << " value at" << grid[it->row][it->row].ant << endl;        
+    }
+
+    
+    for(it = enemyAnts.begin();it < enemyAnts.end(); it++){
 
         bug << "evaluating enemy " ;
         bug << "enemy row " <<it->row << " col " << it->col << endl << endl;
@@ -658,11 +685,11 @@ void State::basicCombat(){
         vector<Location>::iterator goodit;
         for(goodit = friendlys.begin();goodit < friendlys.end(); goodit++){
             bug << "erasing found ants for combat " << goodit->row << "  " << goodit->col <<endl ;
-            vector<Location>::iterator foundAnt = find(myAnts.begin(),myAnts.end(),*goodit);
-            myAnts.erase(foundAnt);
-            bug << "counting bads " <<endl ;
+            bug << "this ant has value" << grid[goodit->row][goodit->row].ant << endl;
+            // vector<Location>::iterator foundAnt = find(myAnts.begin(),myAnts.end(),*goodit);
+            // myAnts.erase(foundAnt);
             int numbadinrange = findAllAnts(*goodit,false,attackradius).size();
-            bug << "storing combat " <<endl ;
+            bug << "counted bads " << numbadinrange <<endl ;
             combats.push_back(Combat(*it,*goodit,numfriendinrange,numbadinrange));          
                 
         }

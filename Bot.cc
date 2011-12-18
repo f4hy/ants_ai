@@ -47,13 +47,17 @@ void Bot::makeMoves()
     state.bug << "gathers" << state.gatherer.size() << endl;
     state.bug << "myants" << state.myAnts.size() << endl;
     
+    // gatherer movement
     for(vector<Path>::iterator itr = state.gatherer.begin();itr < state.gatherer.end(); itr++){
         state.makeMove(itr->start, *(itr->steps.begin()), false);
         state.bug << "gatherer row " <<itr->start.row << " col " << itr->start.col << endl << endl;
 
-
     }
 
+    // combat movement
+    combatmovement();
+    
+    // Defender movement
     for(int ant=0; ant<(int)state.defenders.size(); ant++){
         int moveToMake = -1;
         for(int d=0; d<NUMDIRECTIONS; d++)
@@ -77,8 +81,10 @@ void Bot::makeMoves()
     }
 
 
-//picks out moves for each ant
+    //myAnts movement
     for(int ant=0; ant<(int)state.myAnts.size(); ant++)
+
+
     {
         int moveToMake = -1;
         for(int d=0; d<NUMDIRECTIONS; d++)
@@ -105,6 +111,60 @@ void Bot::makeMoves()
     }
     state.bug << "time taken: " << state.timer.getTime() << "ms" << endl << endl;
 };
+
+
+void Bot::combatmovement(){
+
+    state.bug << "combat movement" << endl;
+    
+    for(vector<Combat>::iterator itr = state.combats.begin();itr < state.combats.end(); itr++){
+
+        Combat c = (*itr);
+
+        if(state.grid[c.friendlyAnt.row][c.friendlyAnt.col].moved > 0){
+            continue;
+        }
+        
+        int moveToMake = -1;
+        int dist = state.taxidistance(c.friendlyAnt,c.enemyAnt);
+        for(int d=0; d<NUMDIRECTIONS; d++)
+        {
+            Location loc = state.getLocation(c.friendlyAnt, d);
+            if(!state.grid[loc.row][loc.col].isWater && state.grid[loc.row][loc.col].ant != 0)
+            {
+                int newdist = state.taxidistance(loc,c.enemyAnt);
+                state.bug << "friends" << c.numfriendlyinrangeofbad << "bad" << c.numenemiesinrangeofgood << endl;
+                if( c.numfriendlyinrangeofbad > c.numenemiesinrangeofgood){
+                    state.bug << "ATTACK" << endl;
+                    if(newdist < dist  ) {
+                        moveToMake = d;
+                        dist = newdist;
+                    }
+                }else if( c.numfriendlyinrangeofbad <= c.numenemiesinrangeofgood){
+                    state.bug << "RUNAWAY" << endl;
+                    if(newdist > dist  ) {
+                        moveToMake = d;
+                        dist = newdist;
+                    }
+                }else{
+                    state.bug << "STAY" << endl;
+                    if(newdist == dist) {
+                        moveToMake = d;
+                        dist = newdist;
+                    }
+                }
+            }
+        }
+        if (moveToMake != -1){
+            state.makeMove(c.friendlyAnt, moveToMake);
+        }else{
+            state.bug << "no good combat move founnd" << endl;
+        }
+            
+    } // End loop over combats
+    
+}
+
 
 //finishes the turn
 void Bot::endTurn()

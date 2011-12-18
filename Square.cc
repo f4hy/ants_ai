@@ -14,6 +14,8 @@ Square::Square()
     updateIndex =0;
 
     parent = -1;
+
+    moved = 0;
 };
 
 void Square::reset()
@@ -30,6 +32,6 @@ void Square::reset()
     deadAnts.clear();
 
     parent = -1;
-    
+    moved = 0;
 };
 
