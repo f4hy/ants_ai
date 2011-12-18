@@ -29,7 +29,7 @@ void Bot::playGame()
         state.basicCombat();
         state.bug << "time taken after combat: " << state.timer.getTime() << "ms" << endl << endl;
 
-        
+
         state.setDefenders();
         state.bug << "time taken after defnders: " << state.timer.getTime() << "ms" << endl << endl;
         makeMoves();
@@ -46,77 +46,27 @@ void Bot::makeMoves()
 
     state.bug << "gathers" << state.gatherer.size() << endl;
     state.bug << "myants" << state.myAnts.size() << endl;
-    
-    // gatherer movement
-    for(vector<Path>::iterator itr = state.gatherer.begin();itr < state.gatherer.end(); itr++){
-        state.makeMove(itr->start, *(itr->steps.begin()), false);
-        state.bug << "gatherer row " <<itr->start.row << " col " << itr->start.col << endl << endl;
 
-    }
+    // gatherer movement
+    foodPathingMove();
 
     // combat movement
-    combatmovement();
-    
-    // Defender movement
-    for(int ant=0; ant<(int)state.defenders.size(); ant++){
-        int moveToMake = -1;
-        for(int d=0; d<NUMDIRECTIONS; d++)
-        {
-            Location loc = state.getLocation(state.defenders[ant], d);
-            if(!state.grid[loc.row][loc.col].isWater && state.grid[loc.row][loc.col].ant != 0)
-            {
-                Location move = state.defenders[ant];
-                if (moveToMake != -1){
-                    Location move = state.getLocation(state.defenders[ant], moveToMake);
-                }
-                if(state.grid[loc.row][loc.col].defensepriority > state.grid[move.row][move.col].defensepriority) {
-                    // state.bug << "found better move" << endl;
-                    moveToMake = d;
-                }
-            }
-        }
-        if (moveToMake != -1){
-            state.makeMove(state.defenders[ant], moveToMake, false);
-        }
-    }
+    combatMove();
 
+    // Defender movement
+    defenderMove();
 
     //myAnts movement
-    for(int ant=0; ant<(int)state.myAnts.size(); ant++)
+    myAntMove();
 
-
-    {
-        int moveToMake = -1;
-        for(int d=0; d<NUMDIRECTIONS; d++)
-        {
-            Location loc = state.getLocation(state.myAnts[ant], d);
-            if(!state.grid[loc.row][loc.col].isWater && state.grid[loc.row][loc.col].ant != 0)
-            {
-                if (moveToMake == -1){
-                    // state.bug << "was -1" << endl;
-                    moveToMake = d;
-                }
-                else{
-                    Location move = state.getLocation(state.myAnts[ant], moveToMake);
-                    if(state.grid[loc.row][loc.col].priority > state.grid[move.row][move.col].priority) {
-                        // state.bug << "found better move" << endl;
-                        moveToMake = d;
-                    }
-                }
-            }
-        }
-        if (moveToMake != -1){
-            state.makeMove(state.myAnts[ant], moveToMake);
-        }
-    }
     state.bug << "time taken: " << state.timer.getTime() << "ms" << endl << endl;
 };
 
 
-void Bot::combatmovement(){
+void Bot::combatMove(){
 
     state.bug << "combat movement" << endl;
-    
+
     for(vector<Combat>::iterator itr = state.combats.begin();itr < state.combats.end(); itr++){
 
         Combat c = (*itr);
@@ -124,7 +74,7 @@ void Bot::combatmovement(){
         if(state.grid[c.friendlyAnt.row][c.friendlyAnt.col].moved > 0){
             continue;
         }
-        
+
         int moveToMake = -1;
         int dist = state.taxidistance(c.friendlyAnt,c.enemyAnt);
         for(int d=0; d<NUMDIRECTIONS; d++)
@@ -160,11 +110,85 @@ void Bot::combatmovement(){
         }else{
             state.bug << "no good combat move founnd" << endl;
         }
-            
+
     } // End loop over combats
-    
+
 }
 
+void Bot::myAntMove(){
+    vector<Location>::iterator it;
+
+    for(it = state.myAnts.begin();it < state.myAnts.end(); it++){
+
+        if(state.grid[it->row][it->col].moved > 0){
+            continue;
+        }
+
+
+        int moveToMake = -1;
+        for(int d=0; d<NUMDIRECTIONS; d++)
+        {
+            Location loc = state.getLocation((*it), d);
+            if(!state.grid[loc.row][loc.col].isWater && state.grid[loc.row][loc.col].ant != 0)
+            {
+                if (moveToMake == -1){
+                    // state.bug << "was -1" << endl;
+                    moveToMake = d;
+                }
+                else{
+                    Location move = state.getLocation((*it), moveToMake);
+                    if(state.grid[loc.row][loc.col].priority > state.grid[move.row][move.col].priority) {
+                        // state.bug << "found better move" << endl;
+                        moveToMake = d;
+                    }
+                }
+            }
+        }
+        if (moveToMake != -1){
+            state.makeMove((*it), moveToMake);
+        }
+    }
+
+}
+
+void Bot::defenderMove(){
+    vector<Location>::iterator it;
+
+    for(it = state.defenders.begin();it < state.defenders.end(); it++){
+        int moveToMake = -1;
+        for(int d=0; d<NUMDIRECTIONS; d++)
+        {
+            Location loc = state.getLocation((*it), d);
+            if(!state.grid[loc.row][loc.col].isWater && state.grid[loc.row][loc.col].ant != 0)
+            {
+                Location move = (*it);
+                if (moveToMake != -1){
+                    Location move = state.getLocation((*it), moveToMake);
+                }
+                if(state.grid[loc.row][loc.col].defensepriority > state.grid[move.row][move.col].defensepriority) {
+                    // state.bug << "found better move" << endl;
+                    moveToMake = d;
+                }
+            }
+        }
+        if (moveToMake != -1){
+            state.makeMove((*it), moveToMake, false);
+        }
+    }
+}
+
+void Bot::foodPathingMove(){
+    for(vector<Path>::iterator itr = state.gatherer.begin();itr < state.gatherer.end(); itr++){
+        if(state.grid[itr->start.row][itr->start.col].moved > 0){
+            continue;
+        }
+        Location loc = state.getLocation(itr->start, *(itr->steps.begin()));
+        if(!state.grid[loc.row][loc.col].isWater && state.grid[loc.row][loc.col].ant != 0){
+            state.makeMove(itr->start, *(itr->steps.begin()), false);
+            state.bug << "gatherer row " <<itr->start.row << " col " << itr->start.col << endl << endl;
+        }
+    }
+}
 
 //finishes the turn
 void Bot::endTurn()
