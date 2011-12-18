@@ -39,7 +39,7 @@ const int PriFood = 50;
 const int PriHill = -100;
 const int PriBadHill = 100;
 const int PriBadAnt = -25;
-const int PriAnt = -10;
+const int PriAnt = -15;
 const int PriBadAntAttack = 25;
 const int PriAntAttack = 40;
 
@@ -47,14 +47,14 @@ const int RadFood = 12;
 const int RadHill = 0;
 const int RadBadHill = 100;
 const int RadBadAnt = 3;
-const int RadAnt = 2;
+const int RadAnt = 5;
 const int RadBadAntAttack = 2;
-const int RadAntAttack = 3;
+const int RadAntAttack = 6;
 
 // Added to squares already visited
 const int PriStuck = -10;
 
-const int defenderThreshhold = 8;
+const int defenderThreshhold = 9;
 
 const int defenseDistance = 10;
 const int maxDefenders = 6;

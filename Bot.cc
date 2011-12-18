@@ -132,18 +132,19 @@ void Bot::myAntMove(){
         int moveToMake = -1;
         for(int d=0; d<NUMDIRECTIONS; d++)
         {
-            Location loc = state.getLocation((*it), d);
+            int i = (d+state.turn/4)%4;
+            Location loc = state.getLocation((*it), i);
             if(!state.grid[loc.row][loc.col].isWater && state.grid[loc.row][loc.col].ant != 0)
             {
                 if (moveToMake == -1){
                     // state.bug << "was -1" << endl;
-                    moveToMake = d;
+                    moveToMake = i;
                 }
                 else{
                     Location move = state.getLocation((*it), moveToMake);
                     if(state.grid[loc.row][loc.col].priority > state.grid[move.row][move.col].priority) {
                         // state.bug << "found better move" << endl;
-                        moveToMake = d;
+                        moveToMake = i;
                     }
                 }
             }

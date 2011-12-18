@@ -587,6 +587,7 @@ void State::setPriorities(){
     // priorityradiusBFS(4,*myHills.begin(), 4);
     // priorityradiusBFS(2,*food.begin(), 2);
 
+
     int count = 1;
     for(it = enemyHills.begin();it < enemyHills.end(); it ++){
         priorityradiusBFS(PriBadHill/count,*it, RadBadHill/count);
@@ -613,9 +614,9 @@ void State::setPriorities(){
             priorityradiusBFS(PriAnt,*it, RadAnt);
         }
 
-        for(it = enemyAnts.begin();it < enemyAnts.end(); it ++){
-            priorityradius(PriBadAnt,*it, RadBadAnt);
-        }
+        // for(it = enemyAnts.begin();it < enemyAnts.end(); it ++){
+        //     priorityradius(PriBadAnt,*it, RadBadAnt);
+        // }
     }
 
 
@@ -673,7 +674,7 @@ void State::setDefenders(){
 
                 defenders.push_back(*foundAnt); // Add to defenders
 
-                // myAnts.erase(foundAnt); // no longer a regular ant.
+                myAnts.erase(foundAnt); // no longer a regular ant.
 
             }
 
