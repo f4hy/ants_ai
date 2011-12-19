@@ -243,7 +243,9 @@ Path State::Dijkstra(const Location loc, vector<Location> haystack  ){
 
         for(int d=0; d<NUMDIRECTIONS; d++){
             Location nLoc = getLocation(currentLoc,d);
-            if((grid[nLoc.row][nLoc.col].updateIndex != updateIndex) && !(grid[nLoc.row][nLoc.col].isWater)){
+            if((grid[nLoc.row][nLoc.col].updateIndex != updateIndex)
+               && !(grid[nLoc.row][nLoc.col].isWater)
+               && !(grid[nLoc.row][nLoc.col].isHill)){
                 // Found gatherer twice
                 if(grid[nLoc.row][nLoc.col].marked == 1){
                     bug << "Refound " << nLoc.row << " " << nLoc.col << endl;
