@@ -22,6 +22,7 @@ struct Bot
     void myAntMove();
     void defenderMove();
     void foodPathingMove();
+    void explorePathingMove();
 
     void endTurn();     //indicates to the engine that it has made its moves
 };

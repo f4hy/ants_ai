@@ -16,7 +16,8 @@ Square::Square()
     parent = -1;
 
     moved = 0;
-    gatherer = 0;
+    marked = 0;
+    explored = 0;
 };
 
 void Square::reset()
@@ -34,5 +35,5 @@ void Square::reset()
 
     parent = -1;
     moved = 0;
-    gatherer = 0;
+    marked = 0;
 };

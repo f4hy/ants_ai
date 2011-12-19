@@ -17,8 +17,11 @@ struct Square
     int updateIndex;
 
     int moved;
-    int gatherer;
+    // int gatherer;
 
+    int marked;
+    int explored;
+    
     std::vector<int> deadAnts;
 
     int parent;
