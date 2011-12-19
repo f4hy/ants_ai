@@ -93,6 +93,7 @@ struct State
     std::vector<Location> defenders;
 
     std::vector<Path> gatherer;
+    std::vector<Path> explorers;
 
 
     std::vector<Location> edge_of_view;
@@ -115,6 +116,9 @@ struct State
     void foodPathing();
 
     void pathIntegrityCheck();
+    void explorePathing();
+
+    void explorepathIntegrityCheck();
 
     void setPriorities();
     void setDefenders();
@@ -133,6 +137,7 @@ struct State
     std::vector<Location> findAllAnts(const Location loc,const bool friendly ,const int distance);
 
     Path Dijkstra(const Location loc, std::vector<Location> haystack  );
+    Path Dijkstraexplore(const Location loc );
 
     void priorityDefense(const Location loc);
 

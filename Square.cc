@@ -17,6 +17,7 @@ Square::Square()
 
     moved = 0;
     marked = 0;
+    explored = 0;
 };
 
 void Square::reset()

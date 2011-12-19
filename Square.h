@@ -20,6 +20,7 @@ struct Square
     // int gatherer;
 
     int marked;
+    int explored;
     
     std::vector<int> deadAnts;
 

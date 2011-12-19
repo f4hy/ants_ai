@@ -43,7 +43,6 @@ void State::reset()
 
 
     // gatherer.clear();
-    //pathIntegrityCheck();
 
     combats.clear();
 
@@ -252,7 +251,12 @@ Path State::Dijkstra(const Location loc, vector<Location> haystack  ){
                     for(vector<Path>::iterator itr = gatherer.begin();itr < gatherer.end(); itr++){
 
                         if (taxidistance(nLoc,loc) < taxidistance(itr->start,loc)){
-                            gatherer.erase(itr);
+                            try{
+                                gatherer.erase(itr);
+                            }
+                            catch(...){
+                                bug << "oops" << endl;
+                            }
                             grid[nLoc.row][nLoc.col].marked == 0;
                             // food.push_back(itr->end);
                         }
@@ -321,6 +325,101 @@ Path State::Dijkstra(const Location loc, vector<Location> haystack  ){
 
 
 } // End Dijkstra
+
+
+
+Path State::Dijkstraexplore(const Location loc  ){
+
+    priority_queue<PriLocation > locQ;
+
+    updateIndex++;
+
+    bug << "starting dijkstra" << endl;
+
+
+    PriLocation start = PriLocation(loc,0);
+
+    locQ.push(start);
+
+    grid[loc.row][loc.col].updateIndex = updateIndex;
+
+
+    int heuristic;
+
+    while (!locQ.empty()){
+
+        PriLocation currentLoc = locQ.top();
+
+        // bug<< "now serveing: " << currentLoc.priority << endl;
+
+        locQ.pop();
+
+        for(int d=0; d<NUMDIRECTIONS; d++){
+            Location nLoc = getLocation(currentLoc,d);
+            if((grid[nLoc.row][nLoc.col].updateIndex != updateIndex) && !(grid[nLoc.row][nLoc.col].isWater)){
+
+
+                if(grid[nLoc.row][nLoc.col].explored == 1 || grid[nLoc.row][nLoc.col].marked == 1){
+                    grid[nLoc.row][nLoc.col].updateIndex = updateIndex;
+                    grid[nLoc.row][nLoc.col].parent = REVERSE[d];
+
+                    //int heuristic  = -taxidistance(nLoc,start)*(1+100*grid[nLoc.row][nLoc.col].isVisible);
+
+                    if(grid[nLoc.row][nLoc.col].isVisible){
+                        heuristic = -taxidistance(nLoc,start);
+                    }
+                    else{
+                        heuristic = -taxidistance(nLoc,start) * 6;
+                    }
+
+                    locQ.push(PriLocation(nLoc,heuristic));
+                }
+                else{
+                    bug << "in find needle row " <<nLoc.row << " col " << nLoc.col << endl << endl;
+
+                    list<int> steps;
+
+                    Location start = nLoc;
+                    Location end = loc;
+
+                    int direction;
+
+                    // bug << "reverse?" << endl;
+
+                    grid[nLoc.row][nLoc.col].parent = REVERSE[d];
+                    // bug << "reverse!" << REVERSE[d] << endl;
+                    while(nLoc != loc){
+                        direction = grid[nLoc.row][nLoc.col].parent;
+                        // bug << "parent" << direction << endl;
+                        steps.push_back(REVERSE[direction]);
+                        if (direction < 0){
+                            bug << "throwing exceptin because direction fail" << endl;
+                            throw;
+
+                        }
+
+
+                        nLoc = getLocation(nLoc,direction);
+                        // bug << "nloc " <<nLoc.row << " col " << nLoc.col << endl;
+                        // bug << "loc " <<loc.row << " col " << loc.col << endl << endl;
+                    }
+                    int d = taxidistance(start,end);
+                    steps.reverse();
+                    return Path(end,start,steps,d);
+
+                }
+
+
+
+            }
+        }
+    }
+
+    return Path(loc);      // Did not find it, just return where we started
+
+
+} // End Dijkstraexplore
+
 
 
 
@@ -438,9 +537,9 @@ void State::priorityDefense(const Location loc){
         grid[edge.row][edge.col].defensepriority += 200;
     }
 
-    
-    
-    
+
+
+
 }
 
 
@@ -514,6 +613,111 @@ void State::foodPathing(){
         }
     }
 }
+
+
+void State::explorePathing(){
+
+
+
+    if( food.size() + defenders.size() > myAnts.size()/2 ){
+        bug << "not enough ants for exploring yet" << endl;
+        explorers.clear();
+        return;
+    }
+    if(enemyHills.size() > 1){
+        bug << "attack dont explore" << endl;
+        explorers.clear();
+        return;
+    }
+    if(myAnts.size() < defenders.size() + food.size() + explorers.size()){
+        bug << "don't need more explores" << endl;
+        return;
+    }
+
+
+    
+    
+    explorepathIntegrityCheck();
+
+    Path testpath;
+
+    vector<Location>::iterator it;
+
+    bug << "Testing path to explore" << endl;
+
+    
+
+    bug << "Dijkstra about to start?" << endl;
+    if(myAnts.size() < 1){
+        return;
+    }
+
+    Location myexplorer;
+    for(it = myAnts.begin();it < myAnts.end(); it++){
+        if(    grid[it->row][it->col].marked == 0){
+            myexplorer = *it;
+            break;
+        }
+        
+    }
+    if(it == myAnts.end()){
+        return;
+    }
+    bug << "exploring using " << myexplorer.row << ", " << myexplorer.col << endl;
+
+    testpath = Dijkstraexplore(myexplorer);
+    bug << "Dijkstra passed " << endl;
+
+    // grid[testpath.start.row][testpath.start.col].marked = 1;
+
+    bug << "path done" << endl;
+    bug << "start" << testpath.start.row << " " << testpath.start.col << endl;
+    bug << "end" << testpath.end.row << " " << testpath.end.col << endl;
+    // testpath.reverse();
+    explorers.push_back(testpath); // Add to gatherer
+
+    bug << "start" << testpath.start.row << " " << testpath.start.col << endl;
+    bug << "end" << testpath.end.row << " " << testpath.end.col << endl;
+    Location tloc = testpath.start;
+
+    for(list<int>::iterator tit = testpath.steps.begin(); tit != testpath.steps.end(); tit++){
+        tloc = getLocation(tloc,*tit);
+        bug << "after a step" << tloc.row << " " << tloc.col << endl;
+    }
+}
+
+
+void State::explorepathIntegrityCheck(){
+    for(vector<Path>::iterator itr = explorers.begin();itr < explorers.end(); itr++){
+
+        bug << "exploreintegrity" << endl;
+        
+        if(grid[itr->end.row][itr->end.col].isWater){
+            bug << "revmoving path because is water?" << itr->end.row << "," << itr->end.col << endl;
+            explorers.erase(itr);
+            continue;
+        }
+
+        if(grid[itr->start.row][itr->start.col].ant != 0){
+            bug << "revmoving because ant died?" << itr->start.row << "," << itr->start.col << endl;
+            explorers.erase(itr);
+            continue;
+        }
+        if(grid[itr->start.row][itr->start.col].marked == 1){
+            bug << "revmoving because claimed?" << itr->start.row << "," << itr->start.col << endl;
+            explorers.erase(itr);
+            continue;
+        }
+        if(itr->steps.size() < 3 ){
+            bug << "Removing because out of steps" << itr->steps.front() << " " <<itr->steps.back() << endl;
+            explorers.erase(itr);
+        }
+        grid[itr->start.row][itr->start.col].marked = 1;
+
+    }
+
+}
+
 
 void State::pathIntegrityCheck(){
     for(vector<Path>::iterator itr = gatherer.begin();itr < gatherer.end(); itr++){
@@ -812,6 +1016,7 @@ void State::updateVisionInformation()
                 if(!visited[nLoc.row][nLoc.col] && distance(sLoc, nLoc) <= viewradius)
                 {
                     grid[nLoc.row][nLoc.col].isVisible = 1;
+                    grid[nLoc.row][nLoc.col].explored = 1;
                     locQueue.push(nLoc);
                 }
                 visited[nLoc.row][nLoc.col] = 1;
