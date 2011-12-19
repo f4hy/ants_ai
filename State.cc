@@ -804,14 +804,22 @@ void State::setDefenders(){
     bug << "setting defenders" <<endl;
 
     if(myHills.size() < 1){return;}
+    int attacking = 1;
+    if(enemyHills.size() > 0){
+        attacking = 3;
+    }
+    
+    numberOfDefenders = attacking* myAnts.size() / (defenderThreshhold*myHills.size());
 
-    numberOfDefenders = myAnts.size() / (defenderThreshhold*myHills.size());
-
-    if(numberOfDefenders > (maxDefenders*myHills.size()) ){
+    if(numberOfDefenders > (attacking*maxDefenders*myHills.size()) ){
         numberOfDefenders = maxDefenders*myHills.size();
     }
+    if(numberOfDefenders > myAnts.size() ){
+        numberOfDefenders = myAnts.size() /2;
+    }
+    
 
-
+    
     if(numberOfDefenders < 1){
         bug << "not enough to defend" << numberOfDefenders <<endl;
         return;
